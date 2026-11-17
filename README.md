@@ -26,44 +26,62 @@
 | M09 平台管理 | 用户/角色 RBAC + 目录树 + 权限 + 调度 + 操作日志 | `Users.vue` / `Directory.vue` / `Schedule.vue` / `Logs.vue` |
 | M10 部署运维 | 单 Jar + 健康检查接口 + JVM/节点监控 | `Ops.vue` / `AdminController` |
 
-## 远程部署（已上线）
+## 从源码构建
 
-- **访问地址**：http://103.85.25.169:8099/
-- **服务器**：103.85.25.169:23195（Ubuntu 22.04 / Java 17 / MySQL 8.0.46）
-- **systemd 服务**：`rbi.service`（`systemctl status rbi` 查看状态）
-- **部署目录**：`/opt/rbi/`，jar `/opt/rbi/report-bi-platform-1.0.0.jar`，日志 `/opt/rbi/logs/rbi.log`
-- **数据库**（均在服务器本地 MySQL 3306）：
-  - 后台元数据库 `rbi_platform`（用户/角色/报表/数据集/图表/指标/权限/调度/日志等 18 张表）
-  - 测试业务库 `rbi_testdb`（`demo_sales` 销售明细 65 行，填报数据也落这里）
-  - 应用账号 `rbi`，连接参数在 `/opt/rbi/rbi.env`（权限 600）
-
-更新部署：把新 jar 上传到 `/opt/rbi/report-bi-platform-1.0.0.jar`，然后 `systemctl restart rbi`。
-
-## 本地快速启动
-
-### 方式一：直接运行打包好的 Jar
+仓库不含构建产物（jar / node_modules / 前端 static 均已 gitignore），按以下顺序构建：
 
 ```bash
-# 需要提供可访问的 MySQL（默认连 127.0.0.1:3306 的 rbi_platform / rbi_testdb）
-cd backend/target
-java -Dfile.encoding=UTF-8 -jar report-bi-platform-1.0.0.jar --server.port=8088
+# 1. 构建前端（产物输出到 backend/src/main/resources/static）
+cd frontend && npm install && npm run build
+
+# 2. 打包后端 fat jar（含前端与依赖）
+cd ../backend && mvn clean package -DskipTests
+# 产物：backend/target/report-bi-platform-1.0.0.jar（约 32MB）
+
+# 3. 运行（需可访问的 MySQL，见下方环境变量）
+java -Dfile.encoding=UTF-8 -jar target/report-bi-platform-1.0.0.jar --server.port=8088
 ```
 
-通过环境变量覆盖连接：`RBI_DB_URL` / `RBI_DB_USER` / `RBI_DB_PWD`（后台库），`RBI_TEST_URL` / `RBI_TEST_USER` / `RBI_TEST_PWD`（测试库）。
+> 后端要求 JDK 8+；打包需用 JDK（非 JRE）。前端需 Node 18+。
 
-数据库初始化脚本在 `backend/src/main/resources/db/`：`schema.sql`+`data.sql`（后台库），`testdb_schema.sql`+`testdb_data.sql`（测试库）。
+## 数据库配置
 
-浏览器打开 http://localhost:8088 ，演示账号（密码均为 `123456`）：`admin` / `analyst` / `viewer`。
+后台元数据库与测试业务库分离，通过环境变量注入：
 
-### 方式二：开发模式
+| 环境变量 | 说明 | 默认值 |
+| --- | --- | --- |
+| `RBI_DB_URL` / `RBI_DB_USER` / `RBI_DB_PWD` | 后台元数据库（报表/用户/权限等） | `jdbc:mysql://127.0.0.1:3306/rbi_platform` |
+| `RBI_TEST_URL` / `RBI_TEST_USER` / `RBI_TEST_PWD` | 测试业务库（`demo_sales` 演示数据） | `jdbc:mysql://127.0.0.1:3306/rbi_testdb` |
+
+初始化脚本：`backend/src/main/resources/db/` 下的 `schema.sql`+`data.sql`（后台库）、`testdb_schema.sql`+`testdb_data.sql`（测试库）。
+
+> 安全说明：数据源密码不在代码/SQL 中出现，`DbInitializer` 启动时按 `rbi.test-datasource` 配置自动同步到数据源记录。
+
+## 生产部署（示例）
+
+```bash
+# 服务器需 JDK 8+ 与 MySQL 8
+mkdir -p /opt/rbi/logs
+# 上传 jar 后写 /opt/rbi/rbi.env（权限 600）：
+#   RBI_DB_URL=...  RBI_DB_USER=...  RBI_DB_PWD=...
+#   RBI_TEST_URL=... RBI_TEST_USER=... RBI_TEST_PWD=...
+#   SPRING_SQL_INIT_MODE=never
+# 再配置 systemd 服务 ExecStart=/usr/bin/java -jar /opt/rbi/report-bi-platform-1.0.0.jar --server.port=8099
+```
+
+更新部署建议：先上传为临时文件，再 `systemctl stop` → `mv` → `systemctl start`，**不要直接覆盖运行中的 jar**（会短暂导致静态资源 404）。
+
+## 本地快速启动（开发模式）
 
 ```bash
 # 后端
 cd backend && mvn spring-boot:run
 # 前端（另开终端）
 cd frontend && npm run dev
-# 打开 http://localhost:5173
+# 打开 http://localhost:5173（Vite 已代理 /api 到 8080）
 ```
+
+演示账号（密码均为 `123456`）：`admin` / `analyst` / `viewer`。
 
 ## 深挖重点：单元格扩展引擎
 
