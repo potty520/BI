@@ -11,7 +11,27 @@ CREATE TABLE IF NOT EXISTS rbi_user (
   real_name VARCHAR(64),
   dept_id BIGINT,
   status INT DEFAULT 1,
+  must_change_pwd INT DEFAULT 0,       -- 1 = 首次登录/重置后必须改密
+  email VARCHAR(128),                  -- 找回密码用
+  token_version INT DEFAULT 0,         -- 令牌版本：改密/踢下线时 +1，旧令牌立即失效
+  mfa_secret VARCHAR(64),              -- TOTP 密钥（Base32）
+  mfa_enabled INT DEFAULT 0,           -- 1 = 已启用二次验证
+  pwd_updated_at TIMESTAMP,            -- 最近一次改密时间（密码过期判定）
+  pwd_expire_days INT,                 -- 该用户的密码有效期（天），空则用全局配置
   create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 登录会话（支持单设备踢出）
+CREATE TABLE IF NOT EXISTS rbi_user_session (
+  jti VARCHAR(64) PRIMARY KEY,
+  user_id BIGINT NOT NULL,
+  username VARCHAR(64),
+  ip VARCHAR(64),
+  user_agent VARCHAR(256),
+  created_at TIMESTAMP,
+  last_seen TIMESTAMP,
+  expire_at TIMESTAMP,
+  revoked INT DEFAULT 0
 );
 CREATE TABLE IF NOT EXISTS rbi_role (
   id BIGINT PRIMARY KEY AUTO_INCREMENT,
@@ -47,6 +67,34 @@ CREATE TABLE IF NOT EXISTS rbi_permission (
   resource_id BIGINT NOT NULL,
   perm VARCHAR(32) NOT NULL            -- view / edit / export
 );
+-- 行级数据权限：某角色在某数据集上可见的列值集合
+CREATE TABLE IF NOT EXISTS rbi_data_scope (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  role_id BIGINT NOT NULL,
+  dataset_id BIGINT NOT NULL,
+  column_name VARCHAR(64) NOT NULL,
+  scope_value VARCHAR(256),
+  scope_type VARCHAR(16) DEFAULT 'values',  -- values：列值白名单；expr：受限表达式
+  filter_expr VARCHAR(512),                 -- expr 模式的过滤条件（如 amount < 10000）
+  create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+-- 列级权限与脱敏：hidden / mask_phone / mask_idcard / mask_name / mask_email / mask_all
+CREATE TABLE IF NOT EXISTS rbi_column_policy (
+  id BIGINT PRIMARY KEY AUTO_INCREMENT,
+  role_id BIGINT NOT NULL,
+  dataset_id BIGINT NOT NULL,
+  column_name VARCHAR(64) NOT NULL,
+  policy VARCHAR(32) NOT NULL,
+  create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+-- 找回密码令牌（一次性、带过期）
+CREATE TABLE IF NOT EXISTS rbi_reset_token (
+  token VARCHAR(64) PRIMARY KEY,
+  user_id BIGINT NOT NULL,
+  expire_at TIMESTAMP NOT NULL,
+  used INT DEFAULT 0,
+  create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
 CREATE TABLE IF NOT EXISTS rbi_schedule (
   id BIGINT PRIMARY KEY AUTO_INCREMENT,
   name VARCHAR(128),
@@ -56,7 +104,11 @@ CREATE TABLE IF NOT EXISTS rbi_schedule (
   receiver VARCHAR(256),
   enabled INT DEFAULT 1,
   last_run_time TIMESTAMP,
-  next_run_time TIMESTAMP
+  next_run_time TIMESTAMP,
+  locked_until TIMESTAMP,  -- 多节点防重：租约到期前其它节点不领取
+  retry_count INT DEFAULT 0,
+  max_retries INT DEFAULT 3,
+  last_error VARCHAR(512)
 );
 CREATE TABLE IF NOT EXISTS rbi_op_log (
   id BIGINT PRIMARY KEY AUTO_INCREMENT,
@@ -64,6 +116,9 @@ CREATE TABLE IF NOT EXISTS rbi_op_log (
   module VARCHAR(64),
   operation VARCHAR(128),
   ip VARCHAR(64),
+  status VARCHAR(16),                  -- SUCCESS / FAIL
+  duration_ms BIGINT,
+  detail VARCHAR(1024),                -- 参数摘要（已脱敏）
   create_time TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

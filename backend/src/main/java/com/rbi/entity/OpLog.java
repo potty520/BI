@@ -1,10 +1,11 @@
 package com.rbi.entity;
 
-import com.baomidou.mybatisplus.annotation.IdType;;
-import com.baomidou.mybatisplus.annotation.TableId;;
-import com.baomidou.mybatisplus.annotation.TableName;;
-import lombok.Data;;
-import java.util.Date;;
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
+import lombok.Data;
+
+import java.util.Date;
 
 @Data
 @TableName("rbi_op_log")
@@ -15,5 +16,8 @@ public class OpLog {
     private String module;
     private String operation;
     private String ip;
+    private String status;
+    private Long durationMs;
+    private String detail;
     private Date createTime;
 }

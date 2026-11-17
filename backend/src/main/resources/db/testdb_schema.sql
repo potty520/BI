@@ -11,4 +11,4 @@ CREATE TABLE IF NOT EXISTS demo_sales (
   amount DECIMAL(14,2),
   quantity INT,
   profit DECIMAL(14,2)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+) ;

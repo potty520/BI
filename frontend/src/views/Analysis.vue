@@ -2,8 +2,8 @@
   <div>
     <div class="page-card">
       <div class="page-header">
-        <div><h3 class="page-title"><span class="module-tag">M07</span>自助分析</h3>
-          <div class="page-desc">拖拽维度/度量生成交叉分析，自动聚合、过滤排序、快速计算（对标 FineBI）</div></div>
+        <div><h3 class="page-title">自助分析</h3>
+          <div class="page-desc">拖拽维度/度量生成交叉分析，自动聚合、过滤排序、快速计算</div></div>
         <div class="toolbar">
           <el-select v-model="datasetId" style="width:180px" @change="loadFields"><el-option v-for="d in datasets" :key="d.id" :label="d.name" :value="d.id"/></el-select>
           <el-button type="primary" @click="run" :loading="loading"><el-icon><VideoPlay /></el-icon>运行分析</el-button>
@@ -70,7 +70,7 @@
       </el-row>
     </div>
 
-    <el-dialog v-model="showSql" title="分析配置 → SQL 翻译引擎（M07 自研要点）" width="720px">
+    <el-dialog v-model="showSql" title="分析配置 → SQL 翻译引擎" width="720px">
       <div class="code-block">{{ sqlText }}</div>
       <div class="hint" style="margin-top:10px">演示环境下聚合在本地引擎执行以保证跨库一致性；生成的 SQL 展示了维度/度量/过滤/分组的翻译规则。</div>
     </el-dialog>

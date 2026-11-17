@@ -3,9 +3,9 @@
     <div class="hero">
       <div>
         <h2>自研报表与BI平台</h2>
-        <p>以帆软 FineReport + FineBI 功能体系为参照，覆盖数据源、数据集、报表设计、参数查询、可视化、填报、自助分析、指标、平台管理与运维全链路。</p>
+        <p>从数据接入、数据集建模到复杂报表、可视化大屏、数据填报与自助分析，一套平台覆盖 BI 全链路；权限、水印、调度与审计开箱可用。</p>
         <div class="hero-tags">
-          <el-tag v-for="m in modules" :key="m.code" size="small" effect="dark" :type="m.type">{{ m.code }} {{ m.name }}</el-tag>
+          <el-tag v-for="m in modules" :key="m.name" size="small" effect="dark" :type="m.type">{{ m.name }}</el-tag>
         </div>
       </div>
       <div class="hero-illustration">
@@ -27,10 +27,10 @@
         <div class="page-card">
           <div class="page-header"><div><h3 class="page-title">快速开始</h3><div class="page-desc">按推荐路径体验平台核心能力</div></div></div>
           <el-steps direction="vertical" :active="4" finish-status="success">
-            <el-step title="M01 数据源接入" description="查看内置演示数据源，或新增 JDBC / 文件 / API 数据源并测试连通性" />
-            <el-step title="M02 数据集管理" description="SQL 数据集支持 ${param} 占位符，在线预览执行结果" />
-            <el-step title="M03 报表设计器（核心）" description="拖拽字段绑定单元格，设置纵向/横向扩展与父格，实时预览扩展效果与公式计算" />
-            <el-step title="M04 ~ M10 能力扩展" description="参数联动、图表大屏、填报入库、自助分析、指标、权限、调度、运维监控" />
+            <el-step title="数据源接入" description="查看内置演示数据源，或新增 JDBC / 文件 / API 数据源并测试连通性" />
+            <el-step title="数据集管理" description="SQL 数据集支持 ${param} 占位符，在线预览执行结果" />
+            <el-step title="报表设计器（核心）" description="拖拽字段绑定单元格，设置纵向/横向扩展与父格，实时预览扩展效果与公式计算" />
+            <el-step title="扩展能力" description="参数联动、图表大屏、填报入库、自助分析、指标、权限、调度、运维监控" />
           </el-steps>
         </div>
       </el-col>
@@ -42,7 +42,7 @@
             <div class="arch-row"><span class="arch-label">后端</span><span>Java 8 · Spring Boot 2.7 · MyBatis-Plus · JWT</span></div>
             <div class="arch-row"><span class="arch-label">存储</span><span>H2 内嵌库（演示）· 可扩展 MySQL/Oracle/达梦/金仓/GaussDB</span></div>
             <div class="arch-row"><span class="arch-label">核心引擎</span><span>单元格扩展引擎（父格/扩展方向）· 公式引擎 · SQL安全替换器</span></div>
-            <div class="arch-row"><span class="arch-label">部署</span><span>前后端打包单 Jar，一条命令启动（M10-01）</span></div>
+            <div class="arch-row"><span class="arch-label">部署</span><span>前后端打包单 Jar，一条命令启动</span></div>
           </div>
           <div class="section-title">演示数据</div>
           <div class="hint">内置 demo_sales 销售明细 64 行，覆盖 5 大区、多省份、4 类产品的 12 个月数据，供设计器、图表、自助分析统一使用。</div>
@@ -58,14 +58,14 @@ import { Coin, Files, Grid, TrendCharts, Setting } from '@element-plus/icons-vue
 import { api } from '../api'
 
 const modules = [
-  { code:'M01', name:'数据源', type:'primary' }, { code:'M02', name:'数据集', type:'success' },
-  { code:'M03', name:'设计器', type:'danger' }, { code:'M04', name:'参数', type:'warning' },
-  { code:'M05', name:'图表', type:'primary' }, { code:'M06', name:'填报', type:'success' },
-  { code:'M07', name:'自助分析', type:'danger' }, { code:'M08', name:'指标', type:'warning' },
-  { code:'M09', name:'平台管理', type:'primary' }, { code:'M10', name:'运维', type:'info' }
+  { name:'数据源', type:'primary' }, { name:'数据集', type:'success' },
+  { name:'设计器', type:'danger' }, { name:'参数', type:'warning' },
+  { name:'图表', type:'primary' }, { name:'填报', type:'success' },
+  { name:'自助分析', type:'danger' }, { name:'指标', type:'warning' },
+  { name:'平台管理', type:'primary' }, { name:'运维', type:'info' }
 ]
 const stats = ref([
-  { label:'报表模板', value:'-', color:'#2563eb', icon:Grid },
+  { label:'报表模板', value:'-', color:'#4f46e5', icon:Grid },
   { label:'数据集', value:'-', color:'#0891b2', icon:Files },
   { label:'数据源', value:'-', color:'#7c3aed', icon:Coin },
   { label:'可视化图表', value:'-', color:'#ea580c', icon:TrendCharts }
@@ -85,16 +85,35 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.hero { background: linear-gradient(120deg,#0f172a,#1e3a5f 55%,#0f766e); border-radius: 14px; padding: 28px 32px; color: #fff; display: flex; justify-content: space-between; align-items: center; position: relative; overflow: hidden; }
-.hero h2 { margin: 0 0 10px; font-size: 24px; }
-.hero p { margin: 0 0 16px; color: #cbd5e1; font-size: 13px; max-width: 720px; line-height: 1.7; }
-.hero-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+.hero {
+  background: linear-gradient(120deg, #1e1b4b 0%, #312e81 55%, #4c1d95 100%);
+  border-radius: 16px; padding: 28px 32px; color: #fff;
+  display: flex; justify-content: space-between; align-items: center;
+  position: relative; overflow: hidden;
+  box-shadow: 0 24px 50px -30px rgba(49, 46, 129, .9);
+}
+.hero::after {
+  content: ''; position: absolute; width: 420px; height: 420px; right: -140px; top: -160px;
+  background: radial-gradient(circle, rgba(165, 180, 252, .28), transparent 62%);
+}
+.hero h2 { margin: 0 0 10px; font-size: 24px; letter-spacing: -.3px; }
+.hero p { margin: 0 0 16px; color: #c7d2fe; font-size: 13px; max-width: 720px; line-height: 1.7; }
+.hero-tags { display: flex; gap: 6px; flex-wrap: wrap; position: relative; z-index: 1; }
 .hero-tags .el-tag { border: none; }
-.hero-illustration { display: flex; align-items: flex-end; gap: 10px; height: 120px; width: 200px; flex: 0 0 200px; opacity: .8; }
-.hero-illustration .bar { flex: 1; background: linear-gradient(180deg,#38bdf8,#2563eb); border-radius: 6px 6px 0 0; animation: grow 1.2s ease-out both; }
+.hero-illustration { display: flex; align-items: flex-end; gap: 10px; height: 120px; width: 200px; flex: 0 0 200px; opacity: .9; position: relative; z-index: 1; }
+.hero-illustration .bar { flex: 1; background: linear-gradient(180deg, #c7d2fe, #6366f1); border-radius: 6px 6px 0 0; animation: grow 1.2s ease-out both; }
 @keyframes grow { from { height: 0; } }
 .stats { margin-top: 16px; }
 .arch { display: flex; flex-direction: column; gap: 2px; }
-.arch-row { display: flex; gap: 10px; padding: 9px 0; border-bottom: 1px dashed #e2e8f0; font-size: 12px; align-items: flex-start; line-height: 1.5; }
-.arch-label { flex: 0 0 64px; color: #2563eb; font-weight: 600; }
+.arch-row { display: flex; gap: 10px; padding: 9px 0; border-bottom: 1px dashed #e6e9f2; font-size: 12px; align-items: flex-start; line-height: 1.5; }
+.arch-label { flex: 0 0 64px; color: var(--brand-strong); font-weight: 600; }
+
+/* 步骤条改用品牌色（默认的绿色与整体靛蓝配色冲突） */
+:deep(.el-step__head.is-success .el-step__icon) { background: var(--brand); border-color: var(--brand); color: #fff; }
+:deep(.el-step__head.is-process .el-step__icon) { border-color: var(--brand); color: var(--brand); }
+:deep(.el-step__title.is-success), :deep(.el-step__title.is-finish) { color: var(--brand-strong); font-weight: 600; }
+:deep(.el-step__description.is-success) { color: var(--ink-500); }
+:deep(.el-step__line) { background-color: #e6e9f2 !important; }
+:deep(.el-step__head.is-success .el-step__line),
+:deep(.el-step__head.is-finish .el-step__line) { background-color: #d8deee !important; }
 </style>

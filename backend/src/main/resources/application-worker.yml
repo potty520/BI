@@ -1,0 +1,12 @@
+# 独立调度进程（worker）：不启 Web，只跑调度
+# 启动：java -jar report-bi-platform-1.0.0.jar --spring.profiles.active=dev,worker
+#
+# 应用实例请保持 rbi.schedule.enabled=false（默认），由 worker 独占调度，
+# 多 worker 之间靠 rbi_schedule.locked_until 租约防重复执行。
+spring:
+  main:
+    web-application-type: none
+
+rbi:
+  schedule:
+    enabled: true

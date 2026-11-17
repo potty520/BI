@@ -2,7 +2,7 @@
   <div>
     <div class="page-card">
       <div class="page-header">
-        <div><h3 class="page-title"><span class="module-tag">M10</span>部署与运维</h3>
+        <div><h3 class="page-title">部署与运维</h3>
           <div class="page-desc">单体部署、集群、节点监控、健康检查、备份恢复</div></div>
         <el-button @click="load"><el-icon><Refresh /></el-icon>刷新监控</el-button>
       </div>
@@ -21,10 +21,10 @@
         <div class="page-card">
           <div class="section-title">部署形态说明</div>
           <el-descriptions :column="1" border>
-            <el-descriptions-item label="M10-01 单体部署">前后端打包为单个可执行 Jar，内嵌 Tomcat，一条命令启动：<code class="mono">java -jar report-bi-platform.jar</code></el-descriptions-item>
-            <el-descriptions-item label="M10-02 集群部署">多节点部署，会话共享（Redis），配置集中存储（数据库）；当前演示为单节点。</el-descriptions-item>
-            <el-descriptions-item label="M10-03 节点监控">暴露 <code class="mono">/api/admin/health</code> 健康检查接口，展示 CPU/内存/在线用户/请求量。</el-descriptions-item>
-            <el-descriptions-item label="M10-04 备份恢复">模板、配置、权限数据定期备份；建议生产环境结合定时任务与对象存储。</el-descriptions-item>
+            <el-descriptions-item label="单体部署">前后端打包为单个可执行 Jar，内嵌 Tomcat，一条命令启动：<code class="mono">java -jar report-bi-platform.jar</code></el-descriptions-item>
+            <el-descriptions-item label="集群部署">多节点部署，会话共享（Redis），配置集中存储（数据库）；当前演示为单节点。</el-descriptions-item>
+            <el-descriptions-item label="节点监控">暴露 <code class="mono">/api/admin/health</code> 健康检查接口，展示 CPU/内存/在线用户/请求量。</el-descriptions-item>
+            <el-descriptions-item label="备份恢复">模板、配置、权限数据定期备份；建议生产环境结合定时任务与对象存储。</el-descriptions-item>
           </el-descriptions>
           <div class="section-title">JVM 运行指标（实时）</div>
           <el-descriptions :column="2" border v-if="health">

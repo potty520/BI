@@ -2,7 +2,7 @@
   <div class="page-card">
     <div class="page-header">
       <div>
-        <h3 class="page-title"><span class="module-tag">M01</span>数据源接入</h3>
+        <h3 class="page-title">数据源接入</h3>
         <div class="page-desc">多源连接、国产库适配、文件与API数据源，连接信息加密存储</div>
       </div>
       <div class="toolbar">

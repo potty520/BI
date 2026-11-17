@@ -2,7 +2,7 @@
   <div>
     <div class="page-card">
       <div class="page-header">
-        <div><h3 class="page-title"><span class="module-tag">M05</span>可视化图表</h3>
+        <div><h3 class="page-title">可视化图表</h3>
           <div class="page-desc">基于 ECharts 封装，10+ 图表类型、数据绑定、样式配置、图表联动</div></div>
         <div class="toolbar"><el-select v-model="datasetId" style="width:170px"><el-option v-for="d in datasets" :key="d.id" :label="d.name" :value="d.id"/></el-select>
           <el-button type="primary" @click="openDialog()"><el-icon><Plus /></el-icon>新建图表</el-button></div>

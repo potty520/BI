@@ -163,7 +163,7 @@
       </aside>
     </div>
 
-    <el-dialog v-model="versionDialog" title="模板版本历史（M03-06）" width="640px">
+    <el-dialog v-model="versionDialog" title="模板版本历史" width="640px">
       <el-table :data="versions" border size="small">
         <el-table-column prop="version" label="版本" width="72" />
         <el-table-column prop="remark" label="说明" min-width="160" />
@@ -173,13 +173,13 @@
       </el-table>
     </el-dialog>
 
-    <el-dialog v-model="showSql" title="分析配置 → SQL 翻译（M07）" width="720px">
+    <el-dialog v-model="showSql" title="分析配置 → SQL 翻译" width="720px">
       <div class="code-block">SELECT region, province, category, SUM(amount) AS sum_amount
 FROM dataset
 WHERE 1=1 AND region = '华东'
 GROUP BY region, province, category
 ORDER BY sum_amount DESC</div>
-      <div class="hint" style="margin-top:10px">到「M07 自助分析」页可实际执行配置到 SQL 的翻译与聚合运算。</div>
+      <div class="hint" style="margin-top:10px">到「自助分析」页可实际执行配置到 SQL 的翻译与聚合运算。</div>
     </el-dialog>
   </div>
 </template>

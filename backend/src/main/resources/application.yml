@@ -2,6 +2,15 @@ server:
   port: 8088
   servlet:
     context-path: /
+    # 强制响应使用 UTF-8 并在 Content-Type 中带 charset，避免客户端（尤其是 PowerShell/老网关）按 Latin-1 解析导致中文乱码
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+  # 生产建议由反向代理终结 TLS；如需直连可将 cookie/secure 打开
+  compression:
+    enabled: true
+    mime-types: application/json,text/html,text/css,application/javascript
 
 spring:
   application:
@@ -16,17 +25,34 @@ spring:
       maximum-pool-size: 20
       minimum-idle: 2
       connection-timeout: 30000
+  # 初始化脚本已改为幂等写法，可重复执行；生产可用 SPRING_SQL_INIT_MODE=never 关闭
   sql:
     init:
-      mode: always
+      mode: ${SPRING_SQL_INIT_MODE:always}
       encoding: UTF-8
       schema-locations: classpath:db/schema.sql
       data-locations: classpath:db/data.sql
-      continue-on-error: true
+      continue-on-error: false
   jackson:
     date-format: yyyy-MM-dd HH:mm:ss
     time-zone: GMT+8
     default-property-inclusion: non_null
+  servlet:
+    multipart:
+      max-file-size: 20MB
+      max-request-size: 20MB
+  # 邮件推送（定时任务 email 类型）；未配置 host 时任务会明确失败而不会假成功
+  mail:
+    host: ${RBI_MAIL_HOST:}
+    port: ${RBI_MAIL_PORT:25}
+    username: ${RBI_MAIL_USER:}
+    password: ${RBI_MAIL_PWD:}
+    default-encoding: UTF-8
+    properties:
+      mail.smtp.auth: ${RBI_MAIL_AUTH:false}
+      mail.smtp.starttls.enable: ${RBI_MAIL_TLS:false}
+      mail.smtp.connectiontimeout: 5000
+      mail.smtp.timeout: 10000
 
 # ===== 测试业务库（MySQL）：demo_sales 等业务演示数据 =====
 rbi:
@@ -35,6 +61,45 @@ rbi:
     url: ${RBI_TEST_URL:jdbc:mysql://127.0.0.1:3306/rbi_testdb?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&createDatabaseIfNotExist=true}
     username: ${RBI_TEST_USER:root}
     password: ${RBI_TEST_PWD:}
+  security:
+    # 允许跨域的前端来源，逗号分隔；生产改成实际域名
+    allowed-origins: ${RBI_ALLOWED_ORIGINS:http://localhost:5173,http://127.0.0.1:5173}
+    # 找回密码链接的前端地址（用户收到邮件后点开）
+    reset-url: ${RBI_RESET_URL:http://127.0.0.1:18088/#/reset-password}
+    # 仅开发环境开启：找回密码接口直接返回 token，便于无邮箱时联调
+    reset-debug: ${RBI_RESET_DEBUG:false}
+  # API 数据集允许访问的主机白名单（逗号分隔）；为空表示全部禁止，防 SSRF
+  api-dataset:
+    allowed-hosts: ${RBI_API_DATASET_HOSTS:}
+  # OIDC 单点登录（授权码流程 + userinfo）
+  oidc:
+    enabled: ${RBI_OIDC_ENABLED:false}
+    client-id: ${RBI_OIDC_CLIENT_ID:}
+    client-secret: ${RBI_OIDC_CLIENT_SECRET:}
+    authorize-url: ${RBI_OIDC_AUTHORIZE_URL:}
+    token-url: ${RBI_OIDC_TOKEN_URL:}
+    userinfo-url: ${RBI_OIDC_USERINFO_URL:}
+    redirect-uri: ${RBI_OIDC_REDIRECT_URI:http://127.0.0.1:18088/api/auth/oidc/callback}
+    username-claim: ${RBI_OIDC_USERNAME_CLAIM:preferred_username}
+    auto-create: ${RBI_OIDC_AUTO_CREATE:false}
+    default-role: ${RBI_OIDC_DEFAULT_ROLE:VIEWER}
+  # LDAP / AD 目录认证（简单绑定）；本地口令失败时回退到目录
+  ldap:
+    enabled: ${RBI_LDAP_ENABLED:false}
+    url: ${RBI_LDAP_URL:}
+    user-dn-pattern: ${RBI_LDAP_USER_DN:}
+    timeout-ms: ${RBI_LDAP_TIMEOUT_MS:5000}
+  export:
+    # 导出文件落盘目录（调度导出、异步导出用）
+    dir: ${RBI_EXPORT_DIR:./export}
+  mail-from: ${RBI_MAIL_FROM:bi@localhost}
+  # 调度失败告警接收人（逗号分隔），为空则仅记日志
+  alert-to: ${RBI_ALERT_TO:}
+  schedule:
+    # 重试退避（分钟），按失败次序取值，用尽后告警并回到正常周期
+    retry-backoff: ${RBI_RETRY_BACKOFF:1,5,15}
+    # 应用实例默认关闭调度，由独立 worker 进程运行（--spring.profiles.active=worker）
+    enabled: ${RBI_SCHEDULE_ENABLED:false}
 
 mybatis-plus:
   configuration:
@@ -44,5 +109,7 @@ mybatis-plus:
       id-type: auto
 
 jwt:
-  secret: report-bi-platform-secret-key-2026-zhangye-operation-maintenance
-  expiration: 86400000
+  # 必须通过 RBI_JWT_SECRET 覆盖（>=32 字节）；此处仅为本机开发默认值
+  secret: ${RBI_JWT_SECRET:report-bi-platform-local-dev-only-secret-key-please-override-2026}
+  expiration: ${RBI_JWT_EXPIRATION:28800000}
+  issuer: ${RBI_JWT_ISSUER:rbi-platform}

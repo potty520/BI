@@ -2,7 +2,7 @@
   <div>
     <div class="page-card">
       <div class="page-header">
-        <div><h3 class="page-title"><span class="module-tag">M09</span>用户与角色管理</h3>
+        <div><h3 class="page-title">用户与角色管理</h3>
           <div class="page-desc">用户 CRUD、角色定义、用户-角色关联（RBAC）</div></div>
         <div class="toolbar"><el-button @click="loadRoles"><el-icon><Refresh /></el-icon>刷新</el-button><el-button type="primary" @click="openUser()"><el-icon><Plus /></el-icon>新建用户</el-button></div>
       </div>
@@ -10,16 +10,18 @@
         <el-col :span="16">
           <el-table :data="users" border size="small">
             <el-table-column prop="id" label="ID" width="60"/>
-            <el-table-column prop="username" label="用户名" width="120"/>
-            <el-table-column prop="realName" label="姓名" width="120"/>
-            <el-table-column label="状态" width="90"><template #default="{row}"><el-tag :type="row.status===1?'success':'danger'" size="small">{{ row.status===1?'启用':'禁用' }}</el-tag></template></el-table-column>
-            <el-table-column prop="createTime" label="创建时间" width="170"/>
-            <el-table-column label="操作" min-width="220">
+            <el-table-column prop="username" label="用户名" width="110"/>
+            <el-table-column prop="realName" label="姓名" width="110"/>
+            <el-table-column label="状态" width="80"><template #default="{row}"><el-tag :type="row.status===1?'success':'danger'" size="small">{{ row.status===1?'启用':'禁用' }}</el-tag></template></el-table-column>
+            <el-table-column label="操作" min-width="300">
               <template #default="{row}">
-                <el-button link type="primary" @click="assign(row)">分配角色</el-button>
-                <el-button link type="primary" @click="openUser(row)">编辑</el-button>
-                <el-button link type="warning" @click="resetPwd(row)">重置密码</el-button>
-                <el-button link type="danger" @click="delUser(row)">删除</el-button>
+                <div class="row-actions">
+                  <el-button link type="primary" @click="assign(row)">分配角色</el-button>
+                  <el-button link type="primary" @click="openUser(row)">编辑</el-button>
+                  <el-button link type="warning" @click="resetPwd(row)">重置密码</el-button>
+                  <el-button link type="danger" @click="kick(row)">踢下线</el-button>
+                  <el-button link type="danger" @click="delUser(row)">删除</el-button>
+                </div>
               </template>
             </el-table-column>
           </el-table>
@@ -42,7 +44,7 @@
         <el-form-item label="用户名"><el-input v-model="userForm.username"/></el-form-item>
         <el-form-item label="姓名"><el-input v-model="userForm.realName"/></el-form-item>
         <el-form-item label="状态"><el-select v-model="userForm.status" style="width:100%"><el-option :value="1" label="启用"/><el-option :value="0" label="禁用"/></el-select></el-form-item>
-        <el-form-item label="初始密码"><el-input value="123456" disabled/></el-form-item>
+        <el-form-item label="初始密码"><el-input value="系统随机生成，保存后提示一次" disabled/></el-form-item>
       </el-form>
       <template #footer><el-button @click="userDialog=false">取消</el-button><el-button type="primary" @click="saveUser">保存</el-button></template>
     </el-dialog>
@@ -81,10 +83,26 @@ async function load(){ users.value=(await api.users()).data }
 async function loadRoles(){ roles.value=(await api.roles()).data }
 function openUser(row){ userForm.value=row?{...row}:{status:1,username:'',realName:''}; userDialog.value=true }
 function openRole(){ roleForm.value={}; roleDialog.value=true }
-async function saveUser(){ await api.saveUser(userForm.value); ElMessage.success('保存成功'); userDialog.value=false; load() }
+async function saveUser(){
+  const res = await api.saveUser(userForm.value)
+  if (res?.data?.initialPassword) {
+    ElMessageBox.alert(`用户 ${res.data.username} 已创建，初始密码：${res.data.initialPassword}（请转交用户，首次登录需修改）`, '初始密码', { type: 'success' })
+  } else {
+    ElMessage.success('保存成功')
+  }
+  userDialog.value=false; load()
+}
 async function saveRole(){ await api.saveRole(roleForm.value); ElMessage.success('保存成功'); roleDialog.value=false; loadRoles() }
-async function resetPwd(row){ await api.resetPwd(row.id); ElMessage.success('密码已重置为 123456') }
+async function resetPwd(row){
+  const res = await api.resetPwd(row.id)
+  ElMessageBox.alert(res.data || '密码已重置', '重置结果', { type: 'success' })
+}
 async function delUser(row){ await ElMessageBox.confirm('确认删除？','提示',{type:'warning'}); await api.delUser(row.id); ElMessage.success('已删除'); load() }
+async function kick(row){
+  await ElMessageBox.confirm(`确认强制「${row.username}」下线？该账号所有已登录会话将立即失效。`, '提示', { type: 'warning' })
+  await api.kickUser(row.id)
+  ElMessage.success('已强制下线')
+}
 async function delRole(row){ await ElMessageBox.confirm('确认删除？','提示',{type:'warning'}); await api.delRole(row.id); ElMessage.success('已删除'); loadRoles() }
 async function assign(row){
   currentUser.value=row; checkedRoles.value=(await api.userRoles(row.id)).data; assignDialog.value=true
@@ -95,4 +113,6 @@ onMounted(()=>{ load(); loadRoles() })
 
 <style scoped>
 .role-item{padding:10px 0;border-bottom:1px dashed #e2e8f0;font-size:12px}
+.row-actions{display:flex;flex-wrap:wrap;gap:2px 12px;line-height:24px}
+.row-actions :deep(.el-button+.el-button){margin-left:0}
 </style>

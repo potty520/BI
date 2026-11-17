@@ -1,12 +1,12 @@
 <template>
   <div class="page-card">
     <div class="page-header">
-      <div><h3 class="page-title"><span class="module-tag">M08</span>指标管理</h3>
+      <div><h3 class="page-title">指标管理</h3>
         <div class="page-desc">指标中心、统一口径、指标血缘（原子指标 / 派生指标）</div></div>
       <el-button type="primary" @click="openDialog()"><el-icon><Plus /></el-icon>新建指标</el-button>
     </div>
     <el-alert type="info" :closable="false" style="margin-bottom:14px">
-      指标中心统一定义业务口径，报表与自助分析可直接引用指标而非手写聚合表达式；点击「血缘」查看指标依赖的底层表与计算逻辑（M08-03）。
+      指标中心统一定义业务口径，报表与自助分析可直接引用指标而非手写聚合表达式；点击「血缘」查看指标依赖的底层表与计算逻辑。
     </el-alert>
     <el-table :data="list" border stripe>
       <el-table-column prop="name" label="指标名称" width="140"/>
@@ -32,7 +32,7 @@
       <template #footer><el-button @click="dialog=false">取消</el-button><el-button type="primary" @click="save">保存</el-button></template>
     </el-dialog>
 
-    <el-dialog v-model="lineageDialog" title="指标血缘（M08-03）" width="560px">
+    <el-dialog v-model="lineageDialog" title="指标血缘" width="560px">
       <template v-if="lineage">
         <div class="lineage-root">{{ lineage.name }} <el-tag size="small">{{ lineage.code }}</el-tag></div>
         <div class="lineage-arrow">↓ 依赖 ↓</div>

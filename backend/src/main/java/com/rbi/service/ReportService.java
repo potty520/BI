@@ -25,12 +25,14 @@ public class ReportService {
     private final ReportMapper reportMapper;
     private final ReportVersionMapper versionMapper;
     private final DatasetQueryService datasetQuery;
+    private final PermissionService permissionService;
     private final ObjectMapper om = new ObjectMapper();
 
     /** 渲染报表：加载布局 -> 查数据 -> 扩展引擎 -> 网格 */
     public ExpandEngine.Result render(Long reportId, Map<String,Object> params) {
         Report r = reportMapper.selectById(reportId);
         if (r == null) throw new BizException("报表不存在: " + reportId);
+        permissionService.assertCanView("report", reportId);
         LayoutModel layout = parseLayout(r.getLayoutJson());
         List<Map<String,Object>> data = r.getDatasetId()==null
                 ? new ArrayList<>() : datasetQuery.queryById(r.getDatasetId(), params);
@@ -54,29 +56,36 @@ public class ReportService {
     /** 保存模板并生成版本 (M03-06) */
     @Transactional
     public Report save(Report report, String remark) {
+        String operator = com.rbi.security.AuthContext.usernameOrSystem();
+        report.setUpdateTime(new Date());
         if (report.getId() == null) {
             report.setCurrentVersion(1);
+            if (report.getCreateBy() == null) report.setCreateBy(operator);
             reportMapper.insert(report);
-            saveVersion(report.getId(), 1, report.getLayoutJson(), remark);
+            saveVersion(report.getId(), 1, report.getLayoutJson(), remark, operator);
         } else {
             Report old = reportMapper.selectById(report.getId());
-            int v = (old==null?0:old.getCurrentVersion()==null?0:old.getCurrentVersion()) + 1;
+            int v = (old == null || old.getCurrentVersion() == null ? 0 : old.getCurrentVersion()) + 1;
             report.setCurrentVersion(v);
             reportMapper.updateById(report);
-            saveVersion(report.getId(), v, report.getLayoutJson(), remark);
+            saveVersion(report.getId(), v, report.getLayoutJson(), remark, operator);
         }
         return report;
     }
 
-    private void saveVersion(Long reportId, int version, String layout, String remark) {
+    private void saveVersion(Long reportId, int version, String layout, String remark, String operator) {
         ReportVersion rv = new ReportVersion();
-        rv.setReportId(reportId); rv.setVersion(version); rv.setLayoutJson(layout);
-        rv.setRemark(remark == null ? "自动保存" : remark); rv.setCreateBy("admin");
+        rv.setReportId(reportId);
+        rv.setVersion(version);
+        rv.setLayoutJson(layout);
+        rv.setRemark(remark == null || remark.isEmpty() ? "自动保存" : remark);
+        rv.setCreateBy(operator);
         rv.setCreateTime(new Date());
         versionMapper.insert(rv);
     }
 
     public List<ReportVersion> versions(Long reportId) {
+        permissionService.assertCanView("report", reportId);
         com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<ReportVersion> w =
                 new com.baomidou.mybatisplus.core.conditions.query.QueryWrapper<>();
         w.eq("report_id", reportId).orderByDesc("version");
@@ -105,11 +114,13 @@ public class ReportService {
         } catch (Exception e) { throw new BizException("布局解析失败: " + e.getMessage()); }
     }
 
-    /** 带数据集名的列表 */
+    /** 带数据集名的列表（按资源权限过滤） */
     public List<Map<String,Object>> listWithDatasetName() {
         List<Report> reports = reportMapper.selectList(null);
         List<Map<String,Object>> out = new ArrayList<>();
         for (Report r : reports) {
+            if (!permissionService.canView("report", r.getId())) continue;
+            if (r.getDirectoryId() != null && !permissionService.canView("directory", r.getDirectoryId())) continue;
             Map<String,Object> m = new LinkedHashMap<>();
             m.put("id", r.getId()); m.put("name", r.getName());
             m.put("directoryId", r.getDirectoryId()); m.put("datasetId", r.getDatasetId());

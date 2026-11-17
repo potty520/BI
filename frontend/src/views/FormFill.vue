@@ -2,7 +2,7 @@
   <div>
     <div class="page-card">
       <div class="page-header">
-        <div><h3 class="page-title"><span class="module-tag">M06</span>数据填报</h3>
+        <div><h3 class="page-title">数据填报</h3>
           <div class="page-desc">表单录入、必填/类型/正则校验、批量提交入库事务、暂存</div></div>
         <div class="toolbar">
           <el-select v-model="formId" style="width:180px"><el-option :value="1" label="销售订单填报"/></el-select>

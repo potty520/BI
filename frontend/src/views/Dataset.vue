@@ -2,7 +2,7 @@
   <div class="page-card">
     <div class="page-header">
       <div>
-        <h3 class="page-title"><span class="module-tag">M02</span>数据集管理</h3>
+        <h3 class="page-title">数据集管理</h3>
         <div class="page-desc">SQL 数据集 / 可视化数据集 / 数据集参数 / 查询缓存</div>
       </div>
       <div class="toolbar">

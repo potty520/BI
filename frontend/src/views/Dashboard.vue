@@ -2,7 +2,7 @@
   <div>
     <div class="page-card">
       <div class="page-header">
-        <div><h3 class="page-title"><span class="module-tag">M05</span>仪表板大屏</h3>
+        <div><h3 class="page-title">仪表板大屏</h3>
           <div class="page-desc">自由拖拽布局、网格吸附、组件缩放、背景设置</div></div>
         <div class="toolbar">
           <el-select v-model="currentId" style="width:180px" @change="loadLayout"><el-option v-for="d in dashboards" :key="d.id" :label="d.name" :value="d.id"/></el-select>

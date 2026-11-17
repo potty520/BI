@@ -3,7 +3,7 @@ package com.rbi.engine;
 import java.util.*;
 
 /**
- * 单元格扩展引擎 —— 帆软类报表的技术核心 (M03-02)
+ * 单元格扩展引擎 —— 中国式复杂报表的技术核心 (M03-02)
  *
  * 核心模型（区域继承）：
  *  1. 单元格类型：text 文本 / dataset 数据字段 / formula 公式。

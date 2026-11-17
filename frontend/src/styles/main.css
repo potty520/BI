@@ -1,26 +1,97 @@
+/* ============================================================
+   设计令牌（v1.6 配色调整）
+   品牌主色由原来的宝蓝 #2563eb 改为靛蓝 #4f46e5，辅色紫 #7c3aed；
+   侧边栏改为深靛黑渐变，内容区改为更浅的冷灰蓝 #f5f7fb。
+   ============================================================ */
+:root {
+  --brand: #4f46e5;
+  --brand-strong: #4338ca;
+  --brand-soft: #eef2ff;
+  --accent: #7c3aed;
+  --ink-900: #0f172a;
+  --ink-700: #334155;
+  --ink-500: #64748b;
+  --ink-400: #94a3b8;
+  --line: #e6e9f2;
+  --bg: #f5f7fb;
+  --surface: #ffffff;
+  --radius-lg: 16px;
+  --radius-md: 12px;
+  --radius-sm: 10px;
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, .04), 0 8px 24px -16px rgba(15, 23, 42, .28);
+  --shadow-md: 0 16px 40px -20px rgba(15, 23, 42, .35);
+
+  /* Element Plus 主题变量：改这几处即可整体换色 */
+  --el-color-primary: #4f46e5;
+  --el-color-primary-light-3: #6366f1;
+  --el-color-primary-light-5: #818cf8;
+  --el-color-primary-light-7: #a5b4fc;
+  --el-color-primary-light-8: #c7d2fe;
+  --el-color-primary-light-9: #eef2ff;
+  --el-color-primary-dark-2: #4338ca;
+  --el-border-radius-base: 10px;
+  --el-text-color-primary: #0f172a;
+  --el-text-color-regular: #334155;
+}
+
 * { box-sizing: border-box; }
 html, body, #app { margin: 0; padding: 0; height: 100%; }
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
-  color: #1e293b;
-  background: #f1f5f9;
+  color: var(--ink-700);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
 }
-.page-card { background: #fff; border-radius: 10px; padding: 18px; box-shadow: 0 1px 3px rgba(15,23,42,.06); }
-.page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
-.page-title { font-size: 18px; font-weight: 700; color: #0f172a; margin: 0; }
-.page-desc { color: #64748b; font-size: 12px; margin-top: 4px; }
+
+.page-card {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-sm);
+}
+.page-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; gap: 12px; flex-wrap: wrap; }
+.page-title { font-size: 17px; font-weight: 700; color: var(--ink-900); margin: 0; letter-spacing: .2px; }
+.page-desc { color: var(--ink-500); font-size: 12px; margin-top: 5px; line-height: 1.6; }
 .toolbar { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
-.module-tag { display: inline-block; background: #dbeafe; color: #1d4ed8; font-size: 11px; padding: 2px 8px; border-radius: 4px; font-weight: 600; margin-right: 8px; }
-.stat-card { background: #fff; border-radius: 10px; padding: 20px; box-shadow: 0 1px 3px rgba(15,23,42,.06); display: flex; align-items: center; gap: 16px; }
-.stat-icon { width: 52px; height: 52px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; color: #fff; }
-.stat-value { font-size: 26px; font-weight: 700; color: #0f172a; line-height: 1; }
-.stat-label { color: #64748b; font-size: 12px; margin-top: 6px; }
-.section-title { font-size: 14px; font-weight: 600; color: #334155; margin: 18px 0 10px; padding-left: 10px; border-left: 3px solid #2563eb; }
+
+/* 模块标签保留样式但不再显示编号 */
+.module-tag {
+  display: inline-block; background: var(--brand-soft); color: var(--brand-strong);
+  font-size: 11px; padding: 2px 8px; border-radius: 6px; font-weight: 600; margin-right: 8px;
+}
+
+.stat-card {
+  background: var(--surface); border-radius: var(--radius-lg); padding: 20px;
+  border: 1px solid var(--line); box-shadow: var(--shadow-sm);
+  display: flex; align-items: center; gap: 16px;
+}
+.stat-icon { width: 52px; height: 52px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 24px; color: #fff; }
+.stat-value { font-size: 26px; font-weight: 700; color: var(--ink-900); line-height: 1; }
+.stat-label { color: var(--ink-500); font-size: 12px; margin-top: 6px; }
+
+.section-title {
+  font-size: 14px; font-weight: 600; color: var(--ink-700);
+  margin: 18px 0 10px; padding-left: 10px;
+  border-left: 3px solid var(--brand); line-height: 1.2;
+}
+
 .el-table { font-size: 13px; }
 .el-table .cell { padding-left: 8px; padding-right: 8px; }
+.el-table th.el-table__cell { background: #f8fafc; color: var(--ink-500); font-weight: 600; }
+
+.el-button { border-radius: var(--radius-sm); }
+.el-input__wrapper, .el-select__wrapper { border-radius: var(--radius-sm); }
+
 .mono { font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace; }
-.code-block { background: #0f172a; color: #a5f3fc; border-radius: 8px; padding: 14px 16px; font-family: Consolas, monospace; font-size: 12px; line-height: 1.6; overflow: auto; white-space: pre-wrap; word-break: break-all; }
-.hint { color: #94a3b8; font-size: 12px; line-height: 1.6; }
+.code-block {
+  background: #0b1020; color: #a5f3fc; border-radius: var(--radius-md);
+  padding: 14px 16px; font-family: Consolas, monospace; font-size: 12px;
+  line-height: 1.6; overflow: auto; white-space: pre-wrap; word-break: break-all;
+}
+.hint { color: var(--ink-400); font-size: 12px; line-height: 1.7; }
+
 ::-webkit-scrollbar { width: 8px; height: 8px; }
 ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 ::-webkit-scrollbar-track { background: transparent; }

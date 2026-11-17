@@ -2,7 +2,7 @@
   <div>
     <div class="page-card">
       <div class="page-header">
-        <div><h3 class="page-title"><span class="module-tag">M04</span>参数与查询</h3>
+        <div><h3 class="page-title">参数与查询</h3>
           <div class="page-desc">参数控件、参数联动（省→市）、钻取与报表跳转配置</div></div>
         <el-button type="primary" @click="openDialog()"><el-icon><Plus /></el-icon>新建参数</el-button>
       </div>
@@ -23,7 +23,7 @@
     <div class="page-card" style="margin-top:16px">
       <div class="section-title">参数控件效果演示（含联动）</div>
       <el-alert type="info" :closable="false" style="margin-bottom:14px">
-        选择「大区」后，「省份」下拉会联动加载该大区下的省份值——对应 M04-03 参数联动；这些值会作为参数注入 SQL 数据集动态刷新报表（M04-02）。
+        选择「大区」后，「省份」下拉会联动加载该大区下的省份值——对应参数联动；这些值会作为参数注入 SQL 数据集动态刷新报表。
       </el-alert>
       <el-row :gutter="16">
         <el-col :span="6">

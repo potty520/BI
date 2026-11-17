@@ -53,6 +53,13 @@ public class SqlSafeBuilder {
         return sb.toString();
     }
 
+    /** 把任意字符串转成 SQL 字符串字面量（含引号）。
+     *  同时转义反斜杠：MySQL 默认把 \ 当转义符，只处理单引号仍可能被绕过。 */
+    public static String literal(String raw) {
+        String v = raw == null ? "" : raw;
+        return "'" + v.replace("\\", "\\\\").replace("'", "''") + "'";
+    }
+
     private static String escape(Param p) {
         if (p == null || p.value == null || p.value.trim().isEmpty()) return "''";
         String v = p.value.trim();
@@ -63,19 +70,19 @@ public class SqlSafeBuilder {
                 String[] arr = v.split(",");
                 List<String> lit = new ArrayList<>();
                 for (String a : arr) {
-                    String s = a.trim().replace("'", "''");
-                    if (!s.isEmpty()) lit.add("'" + s + "'");
+                    String s = a.trim();
+                    if (!s.isEmpty()) lit.add(literal(s));
                 }
                 return lit.isEmpty() ? "''" : String.join(",", lit);
             case "like":
-                v = v.replace("'", "''").replace("%", "\\%").replace("_", "\\_");
-                return "'%" + v + "%' ESCAPE '\\\\'";
+                String esc = v.replace("\\", "\\\\").replace("'", "''").replace("%", "\\%").replace("_", "\\_");
+                return "'%" + esc + "%' ESCAPE '\\\\'";
             case "fragment":
                 // 片段型只能来自白名单，直接给空
                 return " 1=1 ";
             case "value":
             default:
-                return "'" + v.replace("'", "''") + "'";
+                return literal(v);
         }
     }
 }

@@ -1,12 +1,14 @@
 <template>
   <div class="page-card">
     <div class="page-header">
-      <div><h3 class="page-title"><span class="module-tag">M09</span>定时调度</h3>
-        <div class="page-desc">定时刷新、定时推送（邮件/消息）、定时导出（M09-04）</div></div>
+      <div><h3 class="page-title">定时调度</h3>
+        <div class="page-desc">定时刷新、定时推送（邮件/消息）、定时导出</div></div>
       <el-button type="primary" @click="openDialog()"><el-icon><Plus /></el-icon>新建任务</el-button>
     </div>
     <el-alert type="info" :closable="false" style="margin-bottom:14px">
-      Cron 表达式示例：<code class="mono">0 0 9 * * ?</code> 表示每天 09:00 执行。生产环境建议引入 Quartz 集群调度；演示环境展示任务配置与状态管理。
+      Cron 表达式示例：<code class="mono">0 0 9 * * ?</code> 表示每天 09:00 执行。服务端每 30 秒扫描一次到期任务：
+      <b>定时刷新</b>会清理报表数据集缓存，<b>定时导出</b>会把报表导出为 Excel 落到服务端 export 目录；
+      <b>邮件推送</b>需先配置 SMTP，否则任务记为失败（不会假成功）。单节点调度，多节点部署需加分布式锁。
     </el-alert>
     <el-table :data="list" border stripe>
       <el-table-column prop="id" label="ID" width="70"/>
@@ -17,8 +19,13 @@
       <el-table-column label="状态" width="90"><template #default="{row}"><el-tag :type="row.enabled===1?'success':'info'" size="small">{{ row.enabled===1?'启用':'停用' }}</el-tag></template></el-table-column>
       <el-table-column prop="lastRunTime" label="上次执行" width="170"/>
       <el-table-column prop="nextRunTime" label="下次执行" width="170"/>
-      <el-table-column label="操作" width="180" fixed="right">
-        <template #default="{row}"><el-button link type="primary" @click="toggle(row)">{{ row.enabled===1?'停用':'启用' }}</el-button><el-button link type="primary" @click="openDialog(row)">编辑</el-button><el-button link type="danger" @click="del(row)">删除</el-button></template>
+      <el-table-column label="操作" width="250" fixed="right">
+        <template #default="{row}">
+          <el-button link type="success" @click="runNow(row)">立即执行</el-button>
+          <el-button link type="primary" @click="toggle(row)">{{ row.enabled===1?'停用':'启用' }}</el-button>
+          <el-button link type="primary" @click="openDialog(row)">编辑</el-button>
+          <el-button link type="danger" @click="del(row)">删除</el-button>
+        </template>
       </el-table-column>
     </el-table>
 
@@ -46,6 +53,13 @@ const typeLabel=t=>({email:'邮件推送',message:'消息推送',export:'定时�
 async function load(){ list.value=(await api.schedules()).data }
 function openDialog(row){ form.value=row?{...row}:{type:'email',enabled:1,reportId:1,cron:'0 0 9 * * ?'}; dialog.value=true }
 async function save(){ await api.saveSchedule(form.value); ElMessage.success('保存成功'); dialog.value=false; load() }
+async function runNow(row){
+  try {
+    await api.runSchedule(row.id)
+    ElMessage.success('已执行，可在操作日志中查看结果')
+    load()
+  } catch (e) { /* 拦截器已提示 */ }
+}
 async function toggle(row){ row.enabled=row.enabled===1?0:1; await api.saveSchedule(row); ElMessage.success('状态已更新'); load() }
 async function del(row){ await ElMessageBox.confirm('确认删除？','提示',{type:'warning'}); await api.delSchedule(row.id); ElMessage.success('已删除'); load() }
 onMounted(load)

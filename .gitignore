@@ -13,6 +13,8 @@ server.log
 _tmp_*.py
 _tmp_*
 *.tmp
+.tmp/
+export/
 *.bak
 
 # ---- IDE / 系统 ----
