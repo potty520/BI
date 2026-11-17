@@ -68,6 +68,8 @@ rbi:
     reset-url: ${RBI_RESET_URL:http://127.0.0.1:18088/#/reset-password}
     # 仅开发环境开启：找回密码接口直接返回 token，便于无邮箱时联调
     reset-debug: ${RBI_RESET_DEBUG:false}
+    # 密码有效期（天），<=0 表示不过期
+    pwd-expire-days: ${RBI_PWD_EXPIRE_DAYS:90}
   # API 数据集允许访问的主机白名单（逗号分隔）；为空表示全部禁止，防 SSRF
   api-dataset:
     allowed-hosts: ${RBI_API_DATASET_HOSTS:}

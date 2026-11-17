@@ -180,6 +180,7 @@ cd frontend && npm run dev
 - 国产数据库驱动（达梦/金仓/GaussDB）需将对应厂商的 JDBC 驱动 jar 加入 `pom.xml`，在数据源管理页配置驱动类名与 JDBC URL 即可连接。
 - 验证报告：`docs/远程部署验证报告.html`（含 23 项 API 验证结果与浏览器实测截图，为 v1.0 演示验证；v1.1 的鉴权与安全用例见 `docs/smoke-test.ps1`）。
 - 可用性说明：`docs/可用性说明.md`——现在能做什么、不能做什么、上线前 checklist 与已知盲区。
+- 操作手册：`docs/操作手册.md`——环境准备、部署（含 systemd/Nginx/worker）、配置全表、功能操作、权限配置、调度、排障、上线检查单、回归脚本。
 - 冒烟脚本：`docs/smoke-test.ps1`（32）、`docs/smoke-test-v12.ps1`（38）、`docs/smoke-test-v13.ps1`（42）、`docs/smoke-test-v14.ps1`（41）、`docs/smoke-test-v15.ps1`（37）、`docs/smoke-test-worker.ps1`（9，双进程调度验证）；夹具：`dev-smtp-sink.js`、`dev-http-fixture.js`、`dev-oidc-fixture.js`。
 
 ## 变更记录
