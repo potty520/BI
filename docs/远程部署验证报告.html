@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>自研报表与BI平台 - 远程部署验证报告</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin:0; font-family: -apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif; background:#f1f5f9; color:#1e293b; line-height:1.6; }
+  .wrap { max-width:1200px; margin:0 auto; padding:24px; }
+  .hero { background:linear-gradient(120deg,#0f172a,#1e3a5f 55%,#0f766e); color:#fff; border-radius:14px; padding:32px 36px; }
+  .hero h1 { margin:0 0 8px; font-size:26px; }
+  .hero p { margin:4px 0; color:#cbd5e1; font-size:13px; }
+  .badges { margin-top:16px; display:flex; gap:8px; flex-wrap:wrap; }
+  .badge { background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.2); padding:5px 12px; border-radius:20px; font-size:12px; }
+  .badge.ok { background:rgba(34,197,94,.25); border-color:#22c55e; }
+  .card { background:#fff; border-radius:12px; padding:22px 26px; margin-top:18px; box-shadow:0 1px 3px rgba(15,23,42,.06); }
+  h2 { font-size:18px; margin:0 0 16px; color:#0f172a; padding-left:12px; border-left:4px solid #2563eb; }
+  table { width:100%; border-collapse:collapse; font-size:13px; }
+  th,td { border:1px solid #e2e8f0; padding:9px 12px; text-align:left; }
+  th { background:#f8fafc; color:#475569; font-weight:600; }
+  .pass { color:#16a34a; font-weight:700; }
+  .fail { color:#dc2626; font-weight:700; }
+  .mono { font-family:Consolas,"Courier New",monospace; font-size:12px; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:14px; }
+  .stat { background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:16px; }
+  .stat .v { font-size:22px; font-weight:800; color:#2563eb; }
+  .stat .l { font-size:12px; color:#64748b; margin-top:4px; }
+  .shots { display:grid; grid-template-columns:repeat(auto-fit,minmax(340px,1fr)); gap:14px; }
+  .shot { border:1px solid #e2e8f0; border-radius:10px; overflow:hidden; background:#fff; }
+  .shot img { width:100%; display:block; }
+  .shot .cap { padding:8px 12px; font-size:12px; color:#475569; background:#f8fafc; }
+  .note { background:#eff6ff; border:1px solid #bfdbfe; border-radius:8px; padding:12px 16px; font-size:13px; color:#1e40af; margin-top:12px; }
+  .warn { background:#fffbeb; border-color:#fde68a; color:#92400e; }
+  code { background:#f1f5f9; padding:2px 6px; border-radius:4px; font-family:Consolas,monospace; font-size:12px; }
+  .foot { text-align:center; color:#94a3b8; font-size:12px; padding:20px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hero">
+    <h1>自研报表与 BI 平台 · 远程部署验证报告</h1>
+    <p>参照帆软 FineReport + FineBI 功能体系自研 · Java 8/Spring Boot 2.7 后端 + Vue 3 前端 · 10 大模块全覆盖</p>
+    <p>部署日期：2026-11-17 · 目标服务器：103.85.25.169</p>
+    <div class="badges">
+      <span class="badge ok">✓ 部署成功</span>
+      <span class="badge ok">✓ 23/23 API 验证通过</span>
+      <span class="badge ok">✓ 浏览器实测零错误</span>
+      <span class="badge">MySQL 8.0.46 双库</span>
+      <span class="badge">systemd 托管</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>一、部署概况</h2>
+    <div class="grid">
+      <div class="stat"><div class="v">http://103.85.25.169:8099/</div><div class="l">生产访问地址</div></div>
+      <div class="stat"><div class="v">rbi.service</div><div class="l">systemd 服务（active/running）</div></div>
+      <div class="stat"><div class="v">32 MB</div><div class="l">单体可执行 Jar（含前端）</div></div>
+      <div class="stat"><div class="v">23/23</div><div class="l">API 验证通过率 100%</div></div>
+    </div>
+    <table style="margin-top:16px">
+      <tr><th style="width:180px">项目</th><th>内容</th></tr>
+      <tr><td>服务器</td><td>103.85.25.169:23195（root）· Ubuntu 22.04 · Java 17 · 磁盘 13G 可用</td></tr>
+      <tr><td>部署目录</td><td><code>/opt/rbi/</code>，jar <code>/opt/rbi/report-bi-platform-1.0.0.jar</code>，日志 <code>/opt/rbi/logs/rbi.log</code></td></tr>
+      <tr><td>环境变量</td><td><code>/opt/rbi/rbi.env</code>（权限 600，含 MySQL 连接参数）</td></tr>
+      <tr><td>后台元数据库</td><td><code>rbi_platform</code> · 18 张表 · 用户/角色/报表/数据集/图表/指标/权限/调度/日志</td></tr>
+      <tr><td>测试业务库</td><td><code>rbi_testdb</code> · <code>demo_sales</code> 65 行 · 填报数据也持久化到此库</td></tr>
+      <tr><td>数据库账号</td><td><code>rbi</code>（两库全权限，mysql_native_password）</td></tr>
+      <tr><td>健康检查</td><td><code>/api/admin/health</code> → <code>{"status":"UP"}</code></td></tr>
+    </table>
+    <div class="note">双库设计：元数据与业务数据分离。<code>DbInitializer</code> 首次启动自动建测试表并灌入演示数据，已存在则跳过，保护填报数据不丢失。</div>
+  </div>
+
+  <div class="card">
+    <h2>二、API 功能验证结果（23 项全部通过）</h2>
+    <table>
+      <tr><th style="width:50px">序号</th><th style="width:230px">验证项</th><th style="width:70px">结果</th><th>实测证据</th></tr>
+      <tr><td>1</td><td>用户登录（JWT）</td><td class="pass">PASS</td><td>admin / 123456，返回 token 与角色 ADMIN</td></tr>
+      <tr><td>2</td><td>数据集查询（测试库）</td><td class="pass">PASS</td><td>demo_sales 返回 65 行，来自 rbi_testdb</td></tr>
+      <tr><td>3</td><td>中文参数注入</td><td class="pass">PASS</td><td>region=华北 → 15 行，大区集合仅 ['华北']</td></tr>
+      <tr><td>4</td><td>SQL 注入防护</td><td class="pass">PASS</td><td>恶意参数 <code>华北' OR '1'='1</code> → 0 行，未泄露数据</td></tr>
+      <tr><td>5</td><td>报表扩展渲染</td><td class="pass">PASS</td><td>网格 23×5，行2=['华北','北京','电子产品','824,400.00']</td></tr>
+      <tr><td>6</td><td>自助分析聚合</td><td class="pass">PASS</td><td>按大区分组 SUM(amount)，5 个分组</td></tr>
+      <tr><td>7</td><td>图表数据聚合</td><td class="pass">PASS</td><td>各大区销售额 5 个分类</td></tr>
+      <tr><td>8</td><td>填报入库</td><td class="pass">PASS</td><td>提交1条 → "成功提交 1 条记录"</td></tr>
+      <tr><td>9</td><td>填报数据落 MySQL</td><td class="pass">PASS</td><td>回查命中 1 条，确认持久化到 rbi_testdb</td></tr>
+      <tr><td>10-23</td><td>其余模块列表 API</td><td class="pass">PASS</td><td>数据源1/数据集1/报表1/参数3/图表4/仪表板1/用户3/角色3/目录4/权限3/调度1/日志2/指标4/健康UP，共14项全部正常</td></tr>
+    </table>
+    <div class="note">说明：验证期间插入的测试填报数据已清理，demo_sales 恢复为 65 行干净演示数据。</div>
+  </div>
+
+  <div class="card">
+    <h2>三、浏览器实测（真实 Chromium）</h2>
+    <p style="font-size:13px;color:#475569;margin-top:0">使用真实浏览器访问远程地址，逐模块登录、导航、交互，全程控制台 <b class="pass">零错误</b>。</p>
+    <div class="shots">
+      <div class="shot"><img src="screenshots/remote-02-logined.png" alt="工作台"><div class="cap">工作台 · 10 模块导航与统计卡片</div></div>
+      <div class="shot"><img src="screenshots/remote-04-render.png" alt="报表设计器扩展渲染"><div class="cap">M03 报表设计器 · 分页预览 · 父子格扩展渲染（华北→北京/河北，公式聚合 864,396.00）</div></div>
+      <div class="shot"><img src="screenshots/remote-05-charts.png" alt="可视化图表"><div class="cap">M05 可视化图表 · ECharts 柱状/饼/折线图，数据来自远程 MySQL</div></div>
+      <div class="shot"><img src="screenshots/remote-06-form.png" alt="数据填报"><div class="cap">M06 数据填报 · 表单录入与校验规则</div></div>
+      <div class="shot"><img src="screenshots/remote-07-analysis.png" alt="自助分析"><div class="cap">M07 自助分析 · 拖拽维度度量画布</div></div>
+      <div class="shot"><img src="screenshots/remote-07-dashboard.png" alt="仪表板大屏"><div class="cap">M05 仪表板大屏 · 深色驾驶舱、自由拖拽布局</div></div>
+      <div class="shot"><img src="screenshots/remote-07-ops.png" alt="运维监控"><div class="cap">M10 运维监控 · 健康检查与 JVM 指标</div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>四、关键实现说明</h2>
+    <table>
+      <tr><th style="width:200px">模块</th><th>深挖/实现要点</th></tr>
+      <tr><td><b>M03 扩展引擎（深挖重点）</b></td><td>"扩展方向(v/h/none) + 父格关系"的递归渲染引擎：父格每个取值形成分组上下文，子格在上下文内再展开（逐层下钻）；父格被子格"撑开"时值向下继承；公式格在父格上下文中聚合。配套 6 个单元测试。</td></tr>
+      <tr><td>公式引擎</td><td>递归下降解析器，SUM/AVG/COUNT/MAX/MIN/IF/CONCAT/ROUND + 单元格引用 A1+B1 + 四则运算，不依赖脚本引擎（安全）。</td></tr>
+      <tr><td>SQL 安全</td><td><code>${param}</code> 按类型转义；<code>*_filter</code> 走白名单模板；字段/表名白名单校验，杜绝注入。</td></tr>
+      <tr><td>其余模块</td><td>M01 多源接入（含达梦/金仓/GaussDB 驱动位）、M02 数据集缓存、M04 参数联动、M05 12 类图表、M06 事务填报、M07 配置转 SQL、M08 指标血缘、M09 RBAC+权限、M10 单 Jar+监控，均已实现并对接真实 MySQL。</td></tr>
+    </table>
+  </div>
+
+  <div class="card">
+    <h2>五、运维速查</h2>
+    <table>
+      <tr><th style="width:280px">操作</th><th>命令</th></tr>
+      <tr><td>查看服务状态</td><td><code>systemctl status rbi</code></td></tr>
+      <tr><td>重启服务</td><td><code>systemctl restart rbi</code></td></tr>
+      <tr><td>查看日志</td><td><code>tail -f /opt/rbi/logs/rbi.log</code></td></tr>
+      <tr><td>健康检查</td><td><code>curl http://103.85.25.169:8099/api/admin/health</code></td></tr>
+      <tr><td>查看数据库</td><td><code>sudo mysql rbi_platform -e 'SHOW TABLES;'</code> / <code>sudo mysql rbi_testdb -e 'SELECT COUNT(*) FROM demo_sales;'</code></td></tr>
+      <tr><td>演示账号</td><td>admin / analyst / viewer，密码均为 <code>123456</code></td></tr>
+    </table>
+    <div class="note warn">安全提示：数据库账号密码存放于服务器 <code>/opt/rbi/rbi.env</code>，权限已设为 600。请勿将凭据提交到代码仓库。</div>
+  </div>
+
+  <div class="foot">自研报表与BI平台 · 远程部署验证报告 · 生成于 2026-11-17</div>
+</div>
+</body>
+</html>

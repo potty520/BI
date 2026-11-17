@@ -1,0 +1,48 @@
+server:
+  port: 8088
+  servlet:
+    context-path: /
+
+spring:
+  application:
+    name: report-bi-platform
+  # ===== 后台元数据库（MySQL）：用户/报表/数据集/权限/配置等 =====
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: ${RBI_DB_URL:jdbc:mysql://127.0.0.1:3306/rbi_platform?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&createDatabaseIfNotExist=true}
+    username: ${RBI_DB_USER:root}
+    password: ${RBI_DB_PWD:}
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 2
+      connection-timeout: 30000
+  sql:
+    init:
+      mode: always
+      encoding: UTF-8
+      schema-locations: classpath:db/schema.sql
+      data-locations: classpath:db/data.sql
+      continue-on-error: true
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+    default-property-inclusion: non_null
+
+# ===== 测试业务库（MySQL）：demo_sales 等业务演示数据 =====
+rbi:
+  test-datasource:
+    driver: com.mysql.cj.jdbc.Driver
+    url: ${RBI_TEST_URL:jdbc:mysql://127.0.0.1:3306/rbi_testdb?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&createDatabaseIfNotExist=true}
+    username: ${RBI_TEST_USER:root}
+    password: ${RBI_TEST_PWD:}
+
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+  global-config:
+    db-config:
+      id-type: auto
+
+jwt:
+  secret: report-bi-platform-secret-key-2026-zhangye-operation-maintenance
+  expiration: 86400000

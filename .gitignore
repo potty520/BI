@@ -1,0 +1,30 @@
+# ---- 构建产物 ----
+backend/target/
+frontend/dist/
+backend/src/main/resources/static/
+
+# ---- 依赖 ----
+frontend/node_modules/
+*.jar
+
+# ---- 日志与临时文件 ----
+*.log
+server.log
+_tmp_*.py
+_tmp_*
+*.tmp
+*.bak
+
+# ---- IDE / 系统 ----
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db
+*.class
+
+# ---- 敏感信息 ----
+*.env
+rbi.env
+application-local.yml
+application-prod.yml
