@@ -41,7 +41,7 @@
   <div class="hero">
     <h1>自研报表与 BI 平台 · 远程部署验证报告</h1>
     <p>参照帆软 FineReport + FineBI 功能体系自研 · Java 8/Spring Boot 2.7 后端 + Vue 3 前端 · 10 大模块全覆盖</p>
-    <p>部署日期：2026-11-17 · 目标服务器：103.85.25.169</p>
+    <p>部署日期：2026-11-17 · 目标服务器：&lt;生产服务器IP&gt;</p>
     <div class="badges">
       <span class="badge ok">✓ 部署成功</span>
       <span class="badge ok">✓ 23/23 API 验证通过</span>
@@ -54,14 +54,14 @@
   <div class="card">
     <h2>一、部署概况</h2>
     <div class="grid">
-      <div class="stat"><div class="v">http://103.85.25.169:8099/</div><div class="l">生产访问地址</div></div>
+      <div class="stat"><div class="v">http://&lt;生产服务器IP&gt;:8099/</div><div class="l">生产访问地址</div></div>
       <div class="stat"><div class="v">rbi.service</div><div class="l">systemd 服务（active/running）</div></div>
       <div class="stat"><div class="v">32 MB</div><div class="l">单体可执行 Jar（含前端）</div></div>
       <div class="stat"><div class="v">23/23</div><div class="l">API 验证通过率 100%</div></div>
     </div>
     <table style="margin-top:16px">
       <tr><th style="width:180px">项目</th><th>内容</th></tr>
-      <tr><td>服务器</td><td>103.85.25.169:23195（root）· Ubuntu 22.04 · Java 17 · 磁盘 13G 可用</td></tr>
+      <tr><td>服务器</td><td>&lt;生产服务器IP&gt;:23195（root）· Ubuntu 22.04 · Java 17 · 磁盘 13G 可用</td></tr>
       <tr><td>部署目录</td><td><code>/opt/rbi/</code>，jar <code>/opt/rbi/report-bi-platform-1.0.0.jar</code>，日志 <code>/opt/rbi/logs/rbi.log</code></td></tr>
       <tr><td>环境变量</td><td><code>/opt/rbi/rbi.env</code>（权限 600，含 MySQL 连接参数）</td></tr>
       <tr><td>后台元数据库</td><td><code>rbi_platform</code> · 18 张表 · 用户/角色/报表/数据集/图表/指标/权限/调度/日志</td></tr>
@@ -122,7 +122,7 @@
       <tr><td>查看服务状态</td><td><code>systemctl status rbi</code></td></tr>
       <tr><td>重启服务</td><td><code>systemctl restart rbi</code></td></tr>
       <tr><td>查看日志</td><td><code>tail -f /opt/rbi/logs/rbi.log</code></td></tr>
-      <tr><td>健康检查</td><td><code>curl http://103.85.25.169:8099/api/admin/health</code></td></tr>
+      <tr><td>健康检查</td><td><code>curl http://&lt;生产服务器IP&gt;:8099/api/admin/health</code></td></tr>
       <tr><td>查看数据库</td><td><code>sudo mysql rbi_platform -e 'SHOW TABLES;'</code> / <code>sudo mysql rbi_testdb -e 'SELECT COUNT(*) FROM demo_sales;'</code></td></tr>
       <tr><td>演示账号</td><td>admin / analyst / viewer，密码均为 <code>123456</code></td></tr>
     </table>
