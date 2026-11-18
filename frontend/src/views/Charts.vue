@@ -4,11 +4,14 @@
       <div class="page-header">
         <div><h3 class="page-title">可视化图表</h3>
           <div class="page-desc">基于 ECharts 封装，10+ 图表类型、数据绑定、样式配置、图表联动</div></div>
-        <div class="toolbar"><el-select v-model="datasetId" style="width:170px"><el-option v-for="d in datasets" :key="d.id" :label="d.name" :value="d.id"/></el-select>
+        <div class="toolbar"><el-select v-model="datasetId" style="width:170px" placeholder="选择数据集">
+          <el-option label="全部数据集" :value="0"/>
+          <el-option v-for="d in datasets" :key="d.id" :label="d.name" :value="d.id"/>
+        </el-select>
           <el-button type="primary" @click="openDialog()"><el-icon><Plus /></el-icon>新建图表</el-button></div>
       </div>
       <el-row :gutter="16">
-        <el-col :span="8" v-for="c in charts" :key="c.id" style="margin-bottom:16px">
+        <el-col :span="8" v-for="c in filteredCharts" :key="c.id" style="margin-bottom:16px">
           <div class="chart-card">
             <div class="chart-head">
               <div><b>{{ c.name }}</b><el-tag size="small" effect="plain" style="margin-left:8px">{{ typeLabel(c.type) }}</el-tag></div>
@@ -18,6 +21,8 @@
           </div>
         </el-col>
       </el-row>
+      <el-empty v-if="!filteredCharts.length"
+        description="该数据集还没有图表：点右上角「新建图表」创建，或切回「全部数据集」查看所有图表" />
     </div>
 
     <el-dialog v-model="dialog" :title="form.id?'配置图表':'新建图表'" width="640px">
@@ -40,13 +45,13 @@
 </template>
 
 <script setup>
-import { ref, onMounted, nextTick } from 'vue'
+import { ref, computed, watch, onMounted, nextTick } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { Plus } from '@element-plus/icons-vue'
 import * as echarts from 'echarts'
 import { api } from '../api'
 
-const charts=ref([]), datasets=ref([]), fields=ref([]), datasetId=ref(1)
+const charts=ref([]), datasets=ref([]), fields=ref([]), datasetId=ref(0)
 const dialog=ref(false), form=ref({type:'bar'}), cfg=ref({dim:'region',metric:'amount',agg:'SUM',title:''})
 const chartEls={}, chartInstances={}
 const types=[
@@ -57,18 +62,27 @@ const types=[
 const typeLabel=t=>types.find(x=>x.v===t)?.l||t
 function setChartRef(el,id){ if(el) chartEls[id]=el }
 function parseCfg(c){ try{return JSON.parse(c.configJson||'{}')}catch(e){return {}} }
+// 顶部下拉：按数据集过滤图表（0=全部）
+const filteredCharts=computed(()=> datasetId.value===0 ? charts.value
+  : charts.value.filter(c=>Number(c.datasetId)===Number(datasetId.value)))
+
+async function loadFields(dsId){ if(dsId) fields.value=(await api.datasetFields(dsId)).data }
+watch(datasetId, async v=>{ if(v) await loadFields(v)
+  await nextTick(); for(const ch of filteredCharts.value) renderChart(ch) })
+watch(()=>form.value.datasetId, v=>{ if(v&&dialog.value) loadFields(v) })
 
 async function load(){
   const [c,d]=await Promise.all([api.charts(),api.datasets()])
   charts.value=c.data; datasets.value=d.data
-  fields.value=(await api.datasetFields(datasetId.value)).data
+  if(datasetId.value) await loadFields(datasetId.value)
   await nextTick()
   for(const ch of charts.value) renderChart(ch)
 }
 async function renderChart(c){
   const el=chartEls[c.id]; if(!el) return
   let inst=chartInstances[c.id]
-  if(!inst){ inst=echarts.init(el); chartInstances[c.id]=inst }
+  // 卡片被过滤隐藏后重新挂载时 el 会换新节点，旧实例必须废弃重建
+  if(!inst || inst.getDom()!==el){ if(inst) inst.dispose(); inst=echarts.init(el); chartInstances[c.id]=inst }
   const conf=parseCfg(c)
   const data=(await api.chartData(c.id)).data
   inst.setOption(option(c.type,conf,data),true)
@@ -118,9 +132,11 @@ function option(type,conf,data){
     yAxis:{type:'value'},series}
 }
 function openDialog(row){
-  form.value=row?{...row}:{type:'bar',datasetId:datasetId.value,name:'新图表'}
+  // 「全部数据集」(0) 时默认取列表第一个数据集，避免保存时 datasetId 为空
+  form.value=row?{...row}:{type:'bar',datasetId:datasetId.value||datasets.value[0]?.id,name:'新图表'}
   const c=parseCfg(row)
   cfg.value={dim:c.dim||'region',metric:c.metric||'amount',agg:c.agg||'SUM',title:c.title||''}
+  if(form.value.datasetId) loadFields(form.value.datasetId)
   dialog.value=true
 }
 async function save(){
