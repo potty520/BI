@@ -81,8 +81,9 @@ async function renderAll(){
     const values=data.map(d=>d.value)
     const axisLabel={fontSize:9,color:'#94a3b8'}
     let opt
+    const palette=['#38bdf8','#22c55e','#f59e0b','#ef4444','#a855f7','#14b8a6','#eab308','#3b82f6','#ec4899']
     if(isPie){
-      opt={ color:['#38bdf8','#22c55e','#f59e0b','#ef4444','#a855f7','#14b8a6','#eab308'],
+      opt={ color:palette,
         tooltip:{trigger:'item'},
         series:[{type:'pie',data,radius:'62%',
           roseType:ctype==='rose'?'radius':undefined,
@@ -97,7 +98,8 @@ async function renderAll(){
           ?{type:'line',smooth:true,data:values,symbolSize:5,
             areaStyle:ctype==='area'?{opacity:.25}:undefined,
             lineStyle:{color:'#38bdf8'},itemStyle:{color:'#38bdf8'}}
-          :{type:'bar',data:values,itemStyle:{borderRadius:isH?[0,3,3,0]:[3,3,0,0]}}]
+          :{type:'bar',data:values.map((v,i)=>({value:v,itemStyle:{color:palette[i%palette.length]}})),
+            itemStyle:{borderRadius:isH?[0,3,3,0]:[3,3,0,0]}}]
       }
     }
     inst.setOption(opt,true)

@@ -99,7 +99,11 @@ function option(type,conf,data){
       yAxis:{type:'value'},series:[{type:'scatter',data:values,symbolSize:12}]}
   }
   const seriesType=['line','area'].includes(type)?'line':'bar'
-  const st={type:seriesType,name:conf.metric||'数值',data:values,
+  // 柱状图按类目着色：每个地名/类目一个颜色（line 保持系列色不变）
+  const barData = seriesType==='bar'
+    ? values.map((v,i)=>({value:v, itemStyle:{color:palette[i%palette.length]}}))
+    : values
+  const st={type:seriesType,name:conf.metric||'数值',data:barData,
     ...(seriesType==='line'&&type==='area'?{areaStyle:{opacity:.25}}:{}),
     ...(type==='stack'?{stack:'total'}:{}),itemStyle:{borderRadius:type==='bar'?[4,4,0,0]:0}}
   let series=[st]
