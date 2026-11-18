@@ -71,6 +71,7 @@ async function renderAll(){
   for(const item of layout.value){
     const el=chartEls[item.id]; if(!el) continue
     let inst=chartInstances[item.id]
+    if(inst && inst.getDom()!==el){ inst.dispose(); inst=null }
     if(!inst){ inst=echarts.init(el); chartInstances[item.id]=inst }
     const data=(await api.chartData(item.chartId)).data
     const ctype=chartTypes.value[item.chartId]||'bar'
