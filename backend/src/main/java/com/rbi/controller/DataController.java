@@ -105,8 +105,25 @@ public class DataController {
     @PostMapping("/datasources/test")
     @RequireRole("ADMIN")
     public R<?> testDatasource(@RequestBody Datasource d) {
-        jdbc.testConnection(d.getDriverClass(), d.getJdbcUrl(), d.getUsername(), d.getPasswordEnc());
+        String password = d.getPasswordEnc();
+        // 列表接口出于安全不回传密码，因此从列表点「测试连接」时密码为空：
+        // 此处按 id 回查库内密码补齐；其余连接参数仍以前端提交的为准（便于测试未保存的修改）。
+        if ((password == null || password.isEmpty()) && d.getId() != null) {
+            Datasource saved = dsMapper.selectById(d.getId());
+            if (saved != null) {
+                password = saved.getPasswordEnc();
+                if (isBlank(d.getJdbcUrl())) d.setJdbcUrl(saved.getJdbcUrl());
+                if (isBlank(d.getUsername())) d.setUsername(saved.getUsername());
+                if (isBlank(d.getDriverClass())) d.setDriverClass(saved.getDriverClass());
+            }
+        }
+        if (isBlank(d.getJdbcUrl())) throw new BizException("JDBC URL 不能为空");
+        jdbc.testConnection(d.getDriverClass(), d.getJdbcUrl(), d.getUsername(), password);
         return R.ok("连接成功");
+    }
+
+    private boolean isBlank(String s) {
+        return s == null || s.trim().isEmpty();
     }
 
     @GetMapping("/datasource/drivers")
