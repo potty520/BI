@@ -120,7 +120,8 @@ async function runInDialog() {
   try {
     let rows
     if (form.value.id) rows = (await api.queryDataset(form.value.id, {})).data
-    else rows = (await api.executeSql({ sql: form.value.sqlText, params:{} })).data
+    // 新建时也要带上所选数据源，否则会落到平台默认测试库
+    else rows = (await api.executeSql({ sql: form.value.sqlText, params:{}, datasourceId: form.value.datasourceId })).data
     previewRows.value = rows
     previewCols.value = rows.length ? Object.keys(rows[0]) : []
     ElMessage.success('执行成功')

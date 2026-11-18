@@ -18,6 +18,7 @@ import com.rbi.entity.Report;
 import com.rbi.mapper.ChartMapper;
 import com.rbi.mapper.DashboardMapper;
 import com.rbi.mapper.DatasetMapper;
+import lombok.extern.slf4j.Slf4j;
 import com.rbi.mapper.DatasourceMapper;
 import com.rbi.mapper.ParamDefMapper;
 import com.rbi.mapper.ReportMapper;
@@ -55,6 +56,7 @@ import java.util.Map;
  *  - 报表/数据集/数据源/参数/图表的"配置类"写操作：ADMIN 或 ANALYST；
  *  - 数据源连接测试、任意 SQL 执行：仅 ADMIN（这两个能力等价于服务器侧网络与数据库访问）。
  */
+@Slf4j
 @RestController
 @RequestMapping("/api")
 @RequiredArgsConstructor
@@ -163,6 +165,16 @@ public class DataController {
         d.setId(-1L);
         d.setType("sql");
         d.setSqlText(raw);
+        // 支持指定数据源试运行：新建数据集时前端会把所选 datasourceId 带上来，
+        // 不传则回落到默认测试库（保持原行为）
+        Object dsIdRaw = body.get("datasourceId");
+        if (dsIdRaw != null && !"".equals(String.valueOf(dsIdRaw).trim())) {
+            try {
+                d.setDatasourceId(Long.valueOf(String.valueOf(dsIdRaw).trim()));
+            } catch (NumberFormatException ignore) {
+                log.warn("[SQL] 忽略非法 datasourceId: {}", dsIdRaw);
+            }
+        }
         @SuppressWarnings("unchecked")
         Map<String, Object> p = body.get("params") instanceof Map ? (Map<String, Object>) body.get("params") : new HashMap<>();
         return R.ok(datasetQuery.query(d, p));
