@@ -77,9 +77,14 @@ function option(type,conf,data){
   const names=data.map(d=>d.name), values=data.map(d=>d.value)
   const title=conf.title||''
   const palette=['#2563eb','#0891b2','#16a34a','#ea580c','#7c3aed','#db2777','#ca8a04','#059669']
+  // 单系列柱状/折线图不显示底部图例（"企业数"之类是冗余信息，且会与旋转后的轴标签重叠）
+  const hasLegend=['pie','rose','funnel','comb','stack'].includes(type)
+  const needRot=!['pie','rose','funnel','gauge','radar'].includes(type) && names.length>6
   const base={color:palette,title:{text:title,left:'center',textStyle:{fontSize:13,color:'#334155'}},
-    tooltip:{trigger:'axis'},grid:{left:50,right:20,bottom:40,top:title?50:30},
-    legend:{bottom:0,textStyle:{fontSize:10}}}
+    tooltip:{trigger:'axis'},grid:{left:50,right:20,bottom:needRot?70:(hasLegend?58:40),top:title?50:30},
+    ...(hasLegend?{legend:{bottom:0,textStyle:{fontSize:10}}}:{})}
+  // 轴标签防重叠：类目多时旋转，超长名称截断加省略号（悬停 tooltip 仍显示全名）
+  const trunc=v=>{const s=String(v);return s.length>10?s.slice(0,9)+'…':s}
   if(type==='pie'||type==='rose'||type==='funnel'){
     delete base.grid; base.tooltip={trigger:'item'}
     return {...base,series:[{type:type==='rose'?'pie':type,name:conf.metric||'数值',data,radius:type==='rose'?['20%','70%']:'60%',
@@ -108,7 +113,8 @@ function option(type,conf,data){
     ...(type==='stack'?{stack:'total'}:{}),itemStyle:{borderRadius:type==='bar'?[4,4,0,0]:0}}
   let series=[st]
   if(type==='comb') series=[st,{type:'line',name:'趋势',data:values,yAxisIndex:0,smooth:true}]
-  return {...base,xAxis:{type:'category',data:names,axisLabel:{fontSize:10,rotate:names.length>6?20:0}},
+  return {...base,xAxis:{type:'category',data:names,axisLabel:{fontSize:10,rotate:needRot?35:0,hideOverlap:true,
+    margin:10,formatter:trunc}},
     yAxis:{type:'value'},series}
 }
 function openDialog(row){

@@ -89,11 +89,16 @@ async function renderAll(){
           roseType:ctype==='rose'?'radius':undefined,
           label:{fontSize:9,color:'#94a3b8'}}] }
     } else {
+      const truncX=v=>{const s=String(v);return s.length>10?s.slice(0,9)+'…':s}
+      const truncY=v=>{const s=String(v);return s.length>8?s.slice(0,7)+'…':s}
+      const rotX=!isLine&&names.length>6
       opt={ color:['#38bdf8'],
         tooltip:{trigger:'axis'},
-        grid:{left:isH?74:45,right:18,bottom:30,top:20},
-        xAxis:isH?{type:'value',axisLabel}:{type:'category',data:names,axisLabel},
-        yAxis:isH?{type:'category',data:names,axisLabel}:{type:'value',axisLabel},
+        grid:{left:isH?86:45,right:18,bottom:rotX?48:30,top:20},
+        xAxis:isH?{type:'value',axisLabel}
+          :{type:'category',data:names,axisLabel:{...axisLabel,hideOverlap:true,rotate:rotX?30:0,formatter:truncX}},
+        yAxis:isH?{type:'category',data:names,axisLabel:{...axisLabel,hideOverlap:true,formatter:truncY}}
+          :{type:'value',axisLabel},
         series:[isLine
           ?{type:'line',smooth:true,data:values,symbolSize:5,
             areaStyle:ctype==='area'?{opacity:.25}:undefined,
