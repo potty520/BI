@@ -36,9 +36,9 @@
     </el-table>
 
     <el-dialog v-model="dialog" :title="form.id ? '编辑数据源' : '新建数据源'" width="640px">
-      <el-form :model="form" label-width="110px">
-        <el-form-item label="数据源名称" required><el-input v-model="form.name" placeholder="如：生产库-MySQL" /></el-form-item>
-        <el-form-item label="数据库类型" required>
+      <el-form ref="formRef" :model="form" :rules="rules" label-width="110px">
+        <el-form-item label="数据源名称" prop="name"><el-input v-model="form.name" maxlength="128" placeholder="如：生产库-MySQL" /></el-form-item>
+        <el-form-item label="数据库类型" prop="type">
           <el-select v-model="form.type" placeholder="请选择" style="width:100%" @change="onTypeChange">
             <el-option v-for="(cls,key) in drivers" :key="key" :label="typeLabel(key)" :value="key" />
             <el-option label="文件数据源(Excel/CSV)" value="file" />
@@ -47,13 +47,13 @@
         </el-form-item>
         <template v-if="form.type !== 'file' && form.type !== 'api'">
           <el-form-item label="驱动类名"><el-input v-model="form.driverClass" class="mono" /></el-form-item>
-          <el-form-item label="JDBC URL" required><el-input v-model="form.jdbcUrl" class="mono" placeholder="jdbc:mysql://host:3306/db" /></el-form-item>
+          <el-form-item label="JDBC URL" prop="jdbcUrl"><el-input v-model="form.jdbcUrl" class="mono" maxlength="512" placeholder="jdbc:mysql://host:3306/db" /></el-form-item>
           <el-form-item label="用户名"><el-input v-model="form.username" /></el-form-item>
           <el-form-item label="密码"><el-input v-model="form.passwordEnc" type="password" show-password placeholder="保存时加密存储" /></el-form-item>
         </template>
         <el-form-item v-else-if="form.type === 'file'" label="文件路径"><el-input v-model="form.filePath" placeholder="上传后服务端路径" /></el-form-item>
         <el-form-item v-else label="API 配置"><el-input v-model="form.apiConfig" type="textarea" :rows="3" placeholder='{"url":"...","method":"GET","auth":{}}' /></el-form-item>
-        <el-form-item label="备注"><el-input v-model="form.remark" type="textarea" :rows="2" /></el-form-item>
+        <el-form-item label="备注"><el-input v-model="form.remark" type="textarea" :rows="2" maxlength="256" show-word-limit /></el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="test(form)" :loading="testing">测试连接</el-button>
@@ -74,6 +74,18 @@ const list = ref([]); const drivers = ref({})
 const loading = ref(false); const dialog = ref(false)
 const testing = ref(false); const saving = ref(false)
 const form = ref({ type:'mysql' })
+const formRef = ref()
+const rules = {
+  name: [
+    { required: true, message: '请填写数据源名称', trigger: 'blur' },
+    { max: 128, message: '名称最多 128 个字符', trigger: 'blur' }
+  ],
+  type: [ { required: true, message: '请选择数据库类型', trigger: 'change' } ],
+  jdbcUrl: [
+    { required: true, message: '请填写 JDBC URL，如 jdbc:mysql://host:3306/db', trigger: 'blur' },
+    { pattern: /^jdbc:/, message: 'JDBC URL 需以 jdbc: 开头', trigger: 'blur' }
+  ]
+}
 
 const typeLabels = { mysql:'MySQL', oracle:'Oracle', sqlserver:'SQL Server', postgresql:'PostgreSQL', dm:'达梦', kingbase:'人大金仓', gaussdb:'GaussDB', h2:'H2', file:'文件', api:'API' }
 const typeLabel = k => typeLabels[k] || k
@@ -100,6 +112,7 @@ async function test(row) {
 }
 
 async function save() {
+  try { await formRef.value.validate() } catch(e) { return }
   saving.value = true
   try { await api.saveDatasource(form.value); ElMessage.success('保存成功'); dialog.value=false; load() }
   catch(e){} finally { saving.value=false }

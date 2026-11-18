@@ -90,8 +90,43 @@ public class DataController {
     @PostMapping("/datasources")
     @RequireRole({"ADMIN", "ANALYST"})
     public R<?> saveDatasource(@RequestBody Datasource d) {
+        if (d == null) throw new BizException("请求内容为空");
+        // 前端必填项只做了星号标记、未做提交前校验，这里兜底，避免空值直达数据库
+        // 变成 "Field 'name' doesn't have a default value" 这类 500 内部错误
+        if (isBlank(d.getName())) throw new BizException("数据源名称不能为空");
+        d.setName(d.getName().trim());
+        if (d.getName().length() > 128) throw new BizException("数据源名称过长（最多 128 个字符）");
+        if (isBlank(d.getType())) throw new BizException("请选择数据库类型");
+        String type = d.getType().trim().toLowerCase();
+        d.setType(type);
+        if (!"file".equals(type) && !"api".equals(type)) {
+            if (isBlank(d.getJdbcUrl())) throw new BizException("JDBC URL 不能为空");
+            d.setJdbcUrl(d.getJdbcUrl().trim());
+            if (d.getJdbcUrl().length() > 512) throw new BizException("JDBC URL 过长（最多 512 个字符）");
+            if (isBlank(d.getDriverClass())) {
+                String guess = DEFAULT_DRIVERS.get(type);
+                if (guess == null) throw new BizException("驱动类名不能为空");
+                d.setDriverClass(guess);
+            }
+        }
+        if (d.getRemark() != null && d.getRemark().length() > 256) {
+            throw new BizException("备注过长（最多 256 个字符）");
+        }
         dsMapper.save(d);
         return R.ok(d);
+    }
+
+    /** 各数据库类型的默认驱动，前端未选驱动类时兜底 */
+    private static final java.util.Map<String, String> DEFAULT_DRIVERS = new java.util.HashMap<>();
+    static {
+        DEFAULT_DRIVERS.put("mysql", "com.mysql.cj.jdbc.Driver");
+        DEFAULT_DRIVERS.put("oracle", "oracle.jdbc.OracleDriver");
+        DEFAULT_DRIVERS.put("sqlserver", "com.microsoft.sqlserver.jdbc.SQLServerDriver");
+        DEFAULT_DRIVERS.put("postgresql", "org.postgresql.Driver");
+        DEFAULT_DRIVERS.put("dm", "dm.jdbc.driver.DmDriver");
+        DEFAULT_DRIVERS.put("kingbase", "com.kingbase8.Driver");
+        DEFAULT_DRIVERS.put("gaussdb", "com.huawei.gauss200.jdbc.Driver");
+        DEFAULT_DRIVERS.put("h2", "org.h2.Driver");
     }
 
     @DeleteMapping("/datasources/{id}")
