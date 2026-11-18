@@ -14,7 +14,8 @@ _tmp_*.py
 _tmp_*
 *.tmp
 .tmp/
-export/
+# 仅忽略仓库根目录的运行时导出目录；不能写 export/（会误伤 com/rbi/export 源码包）
+/export/
 *.bak
 
 # ---- IDE / 系统 ----
