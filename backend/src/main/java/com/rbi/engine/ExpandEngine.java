@@ -120,7 +120,6 @@ public class ExpandEngine {
             List<Object> values = distinct(data, cell.getField());
             if (values.isEmpty()) values = Collections.singletonList("");
             int r = row;
-            int vidx = 0;
             for (Object v : values) {
                 List<Map<String,Object>> subset = filterByField(data, cell.getField(), v);
                 int span = 1;
@@ -130,20 +129,12 @@ public class ExpandEngine {
                 CellInstance inst = new CellInstance(r, col, v, subset);
                 inst.rowSpan = span;
                 for (CellModel ch : children) {
-                    String ct = ch.getType()==null?"text":ch.getType();
-                    String ce = ch.getExpand()==null?"none":ch.getExpand().toLowerCase();
-                    // 非"纵向扩展数据格"的子格（公式/文本/不扩展格）只在首个父分组求值一次，
-                    // 否则会在每个父格值上重复渲染到同一坐标并被最后一个覆盖
-                    if ("dataset".equals(ct) && "v".equals(ce)) {
-                        int childCol = col + colOffset(cell, ch);
-                        expandNode(ch, r, childCol, subset, inst);
-                    } else if (vidx == 0) {
-                        int childCol = col + colOffset(cell, ch);
-                        expandNode(ch, r, childCol, subset, inst);
-                    }
+                    int childCol = col + colOffset(cell, ch);
+                    // 子格在**每个**父格分组的所在行渲染：各分组起始行 r 不同，不会互相覆盖。
+                    // 早期仅在首个分组（vidx==0）渲染公式/文本子格，导致明细报表除第一行外全为空。
+                    expandNode(ch, r, childCol, subset, inst);
                 }
                 r += span;
-                vidx++;
             }
         } else if ("dataset".equals(type) && "h".equals(expand)) {
             // 横向扩展：字段去重值向右铺开

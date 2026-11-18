@@ -39,6 +39,7 @@ import { api } from '../api'
 const dashboards=ref([]), currentId=ref(1), layout=ref([])
 const gridSnap=ref(true), saving=ref(false), board=ref(null)
 const chartEls={}, chartInstances={}
+const chartTypes=ref({})
 const drag=ref(null)
 function setChartRef(el,id){ if(el) chartEls[id]=el }
 
@@ -51,6 +52,10 @@ function defaultLayout(){
 }
 async function loadDashboards(){
   dashboards.value=(await api.dashboards()).data
+  try{
+    const list=(await api.charts()).data||[]
+    const m={}; list.forEach(c=>m[c.id]=c.type); chartTypes.value=m
+  }catch(e){ chartTypes.value={} }
   if(dashboards.value.length) currentId.value=dashboards.value[0].id
 }
 async function loadLayout(){
@@ -68,17 +73,34 @@ async function renderAll(){
     let inst=chartInstances[item.id]
     if(!inst){ inst=echarts.init(el); chartInstances[item.id]=inst }
     const data=(await api.chartData(item.chartId)).data
-    const isPie=item.chartId===2
-    inst.setOption({
-      color:['#2563eb','#0891b2','#16a34a','#ea580c','#7c3aed'],
-      tooltip:{trigger:isPie?'item':'axis'},
-      grid:{left:45,right:15,bottom:30,top:20},
-      xAxis:isPie?undefined:{type:'category',data:data.map(d=>d.name),axisLabel:{fontSize:9,color:'#94a3b8'}},
-      yAxis:isPie?undefined:{type:'value',axisLabel:{fontSize:9,color:'#94a3b8'}},
-      series:[isPie
-        ?{type:'pie',data,radius:'62%',label:{fontSize:9,color:'#94a3b8'}}
-        :{type:'bar',data:data.map(d=>d.value),itemStyle:{borderRadius:[3,3,0,0]}}]
-    },true)
+    const ctype=chartTypes.value[item.chartId]||'bar'
+    const isPie=['pie','rose','funnel'].includes(ctype)
+    const isLine=['line','area'].includes(ctype)
+    const isH=ctype==='barH'
+    const names=data.map(d=>d.name)
+    const values=data.map(d=>d.value)
+    const axisLabel={fontSize:9,color:'#94a3b8'}
+    let opt
+    if(isPie){
+      opt={ color:['#38bdf8','#22c55e','#f59e0b','#ef4444','#a855f7','#14b8a6','#eab308'],
+        tooltip:{trigger:'item'},
+        series:[{type:'pie',data,radius:'62%',
+          roseType:ctype==='rose'?'radius':undefined,
+          label:{fontSize:9,color:'#94a3b8'}}] }
+    } else {
+      opt={ color:['#38bdf8'],
+        tooltip:{trigger:'axis'},
+        grid:{left:isH?74:45,right:18,bottom:30,top:20},
+        xAxis:isH?{type:'value',axisLabel}:{type:'category',data:names,axisLabel},
+        yAxis:isH?{type:'category',data:names,axisLabel}:{type:'value',axisLabel},
+        series:[isLine
+          ?{type:'line',smooth:true,data:values,symbolSize:5,
+            areaStyle:ctype==='area'?{opacity:.25}:undefined,
+            lineStyle:{color:'#38bdf8'},itemStyle:{color:'#38bdf8'}}
+          :{type:'bar',data:values,itemStyle:{borderRadius:isH?[0,3,3,0]:[3,3,0,0]}}]
+      }
+    }
+    inst.setOption(opt,true)
   }
 }
 function snap(v){ return gridSnap.value?Math.round(v*2)/2:Math.round(v*10)/10 }
