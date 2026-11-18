@@ -86,26 +86,31 @@ async function renderAll(){
     if(isPie){
       opt={ color:palette,
         tooltip:{trigger:'item'},
-        series:[{type:'pie',data,radius:'62%',
+        series:[{type:'pie',data,radius:['8%','62%'],
           roseType:ctype==='rose'?'radius':undefined,
-          label:{fontSize:9,color:'#94a3b8'}}] }
+          itemStyle:{borderColor:'rgba(9,18,38,.9)',borderWidth:2},
+          label:{fontSize:9,color:'#94a3b8'},
+          labelLine:{lineStyle:{color:'rgba(148,163,184,.4)'}}}] }
     } else {
       const truncX=v=>{const s=String(v);return s.length>10?s.slice(0,9)+'…':s}
       const truncY=v=>{const s=String(v);return s.length>8?s.slice(0,7)+'…':s}
       const rotX=!isLine&&names.length>6
       opt={ color:['#38bdf8'],
-        tooltip:{trigger:'axis'},
+        tooltip:{trigger:'axis',backgroundColor:'rgba(9,18,38,.92)',borderColor:'rgba(56,189,248,.35)',textStyle:{color:'#dbeafe',fontSize:11}},
         grid:{left:isH?86:45,right:18,bottom:rotX?48:30,top:20},
-        xAxis:isH?{type:'value',axisLabel}
-          :{type:'category',data:names,axisLabel:{...axisLabel,hideOverlap:true,rotate:rotX?30:0,formatter:truncX}},
-        yAxis:isH?{type:'category',data:names,axisLabel:{...axisLabel,hideOverlap:true,formatter:truncY}}
-          :{type:'value',axisLabel},
+        xAxis:isH?{type:'value',axisLabel,splitLine:{lineStyle:{color:'rgba(148,163,184,.12)'}}}
+          :{type:'category',data:names,axisLabel:{...axisLabel,hideOverlap:true,rotate:rotX?30:0,formatter:truncX},axisLine:{lineStyle:{color:'rgba(148,163,184,.3)'}}},
+        yAxis:isH?{type:'category',data:names,axisLabel:{...axisLabel,hideOverlap:true,formatter:truncY},axisLine:{lineStyle:{color:'rgba(148,163,184,.3)'}}}
+          :{type:'value',axisLabel,splitLine:{lineStyle:{color:'rgba(148,163,184,.12)'}}},
         series:[isLine
           ?{type:'line',smooth:true,data:values,symbolSize:5,
-            areaStyle:ctype==='area'?{opacity:.25}:undefined,
-            lineStyle:{color:'#38bdf8'},itemStyle:{color:'#38bdf8'}}
-          :{type:'bar',data:values.map((v,i)=>({value:v,itemStyle:{color:palette[i%palette.length]}})),
-            itemStyle:{borderRadius:isH?[0,3,3,0]:[3,3,0,0]}}]
+            areaStyle:{color:'rgba(56,189,248,.16)'},
+            lineStyle:{color:'#38bdf8',width:2,shadowColor:'rgba(56,189,248,.55)',shadowBlur:9},
+            itemStyle:{color:'#7dd3fc',borderColor:'#38bdf8',borderWidth:1}}
+          :{type:'bar',barMaxWidth:26,
+            data:values.map((v,i)=>({value:v,itemStyle:{
+              color:{type:'linear',x:0,y:isH?0:1,x2:0,y2:isH?1:0,colorStops:[{offset:0,color:palette[i%palette.length]},{offset:1,color:'rgba(56,189,248,.35)'}]},
+              borderRadius:isH?[0,3,3,0]:[3,3,0,0]}}))}]
       }
     }
     inst.setOption(opt,true)
@@ -147,9 +152,42 @@ onMounted(async()=>{ await loadDashboards(); await loadLayout() })
 </script>
 
 <style scoped>
-.dashboard{position:relative;height:calc(100vh - 260px);min-height:480px;background:radial-gradient(ellipse at top,#1e3a5f,#0f172a);border-radius:12px;overflow:hidden;margin-top:12px}
-.dash-item{position:absolute;background:rgba(255,255,255,.04);border:1px solid rgba(148,163,184,.25);border-radius:8px;display:flex;flex-direction:column;overflow:hidden}
-.dash-head{height:30px;display:flex;align-items:center;justify-content:space-between;padding:0 10px;color:#e2e8f0;font-size:12px;font-weight:600;cursor:move;background:rgba(148,163,184,.1);user-select:none}
-.dash-chart{flex:1;min-height:0}
-.resize-handle{position:absolute;right:0;bottom:0;width:16px;height:16px;cursor:nwse-resize;background:linear-gradient(135deg,transparent 50%,#38bdf8 50%,#38bdf8 70%,transparent 70%)}
+.dashboard{
+  position:relative;height:calc(100vh - 260px);min-height:480px;border-radius:12px;overflow:hidden;margin-top:12px;
+  background:
+    radial-gradient(ellipse at 12% 8%, rgba(56,189,248,.14), transparent 42%),
+    radial-gradient(ellipse at 88% 92%, rgba(168,85,247,.12), transparent 42%),
+    radial-gradient(ellipse at 50% 50%, rgba(14,42,80,.5), transparent 75%),
+    linear-gradient(160deg,#0c1e3c 0%,#0f172a 55%,#0a1226 100%);
+  box-shadow:inset 0 0 60px rgba(2,8,20,.6);
+}
+/* 网格底纹 */
+.dashboard::before{content:'';position:absolute;inset:0;pointer-events:none;
+  background-image:linear-gradient(rgba(56,189,248,.05) 1px,transparent 1px),linear-gradient(90deg,rgba(56,189,248,.05) 1px,transparent 1px);
+  background-size:38px 38px;
+  mask-image:radial-gradient(ellipse at center,black 40%,transparent 95%);
+  -webkit-mask-image:radial-gradient(ellipse at center,black 40%,transparent 95%);
+}
+.dash-item{
+  position:absolute;display:flex;flex-direction:column;overflow:hidden;border-radius:10px;
+  background:linear-gradient(180deg,rgba(17,34,64,.88),rgba(9,18,38,.82));
+  border:1px solid rgba(56,189,248,.22);
+  box-shadow:0 10px 28px rgba(2,8,20,.5),inset 0 0 28px rgba(56,189,248,.045);
+  transition:border-color .2s,box-shadow .2s;
+}
+.dash-item:hover{border-color:rgba(56,189,248,.5);box-shadow:0 12px 32px rgba(2,8,20,.6),0 0 18px rgba(56,189,248,.15),inset 0 0 28px rgba(56,189,248,.06)}
+/* 四角科技感括号 */
+.dash-item::before,.dash-item::after{content:'';position:absolute;width:12px;height:12px;pointer-events:none;opacity:.85}
+.dash-item::before{left:-1px;top:-1px;border-left:2px solid #38bdf8;border-top:2px solid #38bdf8;border-top-left-radius:10px}
+.dash-item::after{right:-1px;bottom:-1px;border-right:2px solid #38bdf8;border-bottom:2px solid #38bdf8;border-bottom-right-radius:10px}
+.dash-head{
+  height:32px;display:flex;align-items:center;justify-content:space-between;padding:0 12px;cursor:move;user-select:none;
+  color:#dbeafe;font-size:12px;font-weight:600;letter-spacing:.06em;
+  background:linear-gradient(90deg,rgba(56,189,248,.14),rgba(56,189,248,.02) 60%,transparent);
+  border-bottom:1px solid rgba(56,189,248,.16);
+}
+.dash-head :deep(.el-icon){color:rgba(148,163,184,.55);font-size:13px}
+.dash-chart{flex:1;min-height:0;padding:2px 4px 4px}
+.resize-handle{position:absolute;right:0;bottom:0;width:16px;height:16px;cursor:nwse-resize;z-index:2;background:linear-gradient(135deg,transparent 50%,#38bdf8 50%,#38bdf8 70%,transparent 70%);opacity:.6}
+.resize-handle:hover{opacity:1}
 </style>
