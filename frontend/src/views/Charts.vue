@@ -95,10 +95,13 @@ function option(type,conf,data){
   const hasLegend=['pie','rose','funnel','comb','stack'].includes(type)
   const needRot=!['pie','rose','funnel','gauge','radar'].includes(type) && names.length>6
   const base={color:palette,title:{text:title,left:'center',textStyle:{fontSize:13,color:'#334155'}},
-    tooltip:{trigger:'axis'},grid:{left:50,right:20,bottom:needRot?70:(hasLegend?58:40),top:title?50:30},
+    tooltip:{trigger:'axis'},grid:{left:6,right:20,bottom:needRot?70:(hasLegend?58:40),top:title?50:30,containLabel:true},
     ...(hasLegend?{legend:{bottom:0,textStyle:{fontSize:10}}}:{})}
   // 轴标签防重叠：类目多时旋转，超长名称截断加省略号（悬停 tooltip 仍显示全名）
   const trunc=v=>{const s=String(v);return s.length>10?s.slice(0,9)+'…':s}
+  // y 轴数值紧凑化（万/亿），避免长数字把左侧空间撑爆或首位被裁掉
+  const fmtNum=v=>{const n=Number(v);if(!isFinite(n))return v;const a=Math.abs(n);
+    if(a>=1e8)return (n/1e8).toFixed(1)+'亿';if(a>=1e4)return (n/1e4).toFixed(a%1e4?1:0)+'万';return n}
   if(type==='pie'||type==='rose'||type==='funnel'){
     delete base.grid; base.tooltip={trigger:'item'}
     return {...base,series:[{type:type==='rose'?'pie':type,name:conf.metric||'数值',data,radius:type==='rose'?['20%','70%']:'60%',
@@ -115,7 +118,7 @@ function option(type,conf,data){
   }
   if(type==='scatter'){
     return {...base,xAxis:{type:'category',data:names,axisLabel:{fontSize:10,rotate:20}},
-      yAxis:{type:'value'},series:[{type:'scatter',data:values,symbolSize:12}]}
+      yAxis:{type:'value',axisLabel:{formatter:fmtNum}},series:[{type:'scatter',data:values,symbolSize:12}]}
   }
   const seriesType=['line','area'].includes(type)?'line':'bar'
   // 柱状图按类目着色：每个地名/类目一个颜色（line 保持系列色不变）
@@ -129,7 +132,7 @@ function option(type,conf,data){
   if(type==='comb') series=[st,{type:'line',name:'趋势',data:values,yAxisIndex:0,smooth:true}]
   return {...base,xAxis:{type:'category',data:names,axisLabel:{fontSize:10,rotate:needRot?35:0,hideOverlap:true,
     margin:10,formatter:trunc}},
-    yAxis:{type:'value'},series}
+    yAxis:{type:'value',axisLabel:{formatter:fmtNum}},series}
 }
 function openDialog(row){
   // 「全部数据集」(0) 时默认取列表第一个数据集，避免保存时 datasetId 为空
