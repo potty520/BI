@@ -11,7 +11,7 @@
         </div>
       </div>
       <el-alert type="info" :closable="false" style="margin-bottom:12px">
-        拖拽下方图表卡片标题可移动位置；右下角手柄可缩放尺寸。布局以百分比坐标持久化，支持网格吸附。
+        拖动卡片标题移动位置，拖右下角手柄调整大小；松手后其他卡片自动避让换行并自动保存。布局以百分比坐标持久化，支持网格吸附。
       </el-alert>
     </div>
 
@@ -142,19 +142,37 @@ function onMove(e){
   if(!drag.value) return
   const d=drag.value, rect=d.rect
   const dx=(e.clientX-d.sx)/rect.width*100, dy=(e.clientY-d.sy)/rect.height*100
-  if(d.type==='move'){
+    if(d.type==='move'){
     d.item.x=Math.max(0,Math.min(100-d.item.w,snap(d.ox+dx)))
     d.item.y=Math.max(0,Math.min(100-d.item.h,snap(d.oy+dy)))
   }else{
-    d.item.w=Math.max(15,Math.min(100-d.item.x,snap(d.ow+dx)))
-    d.item.h=Math.max(15,Math.min(100-d.item.y,snap(d.oh+dy)))
+    d.item.w=Math.max(15,Math.min(100,snap(d.ow+dx)))
+    d.item.h=Math.max(15,Math.min(100,snap(d.oh+dy)))
   }
   for(const k in chartInstances) chartInstances[k].resize()
 }
-function onUp(){ if(drag.value){ drag.value=null } }
-async function saveLayout(){
+/* 流式重排：按阅读顺序(y,x)把卡片从左到右摆放，一行放不下自动换行，永不重叠 */
+function reflow(){
+  const items=[...layout.value].sort((a,b)=>(a.y-b.y)||(a.x-b.x))
+  let x=0,y=0,rowH=0
+  for(const it of items){
+    it.w=Math.min(it.w,100)
+    if(x>0 && x+it.w>100.5){ x=0; y+=rowH; rowH=0 }
+    it.x=Math.round(x*10)/10; it.y=Math.round(y*10)/10
+    rowH=Math.max(rowH,it.h); x+=it.w
+  }
+  layout.value=items
+  for(const k in chartInstances) chartInstances[k].resize()
+}
+function onUp(){
+  if(!drag.value) return
+  drag.value=null
+  reflow()
+  saveLayout(true)
+}
+async function saveLayout(silent=false){
   saving.value=true
-  try{ await api.saveDashboard({id:currentId.value,name:dashboards.value.find(x=>x.id===currentId.value)?.name||'驾驶舱',layoutJson:JSON.stringify(layout.value),background:'#0f172a'}); ElMessage.success('布局已保存') }
+  try{ await api.saveDashboard({id:currentId.value,name:dashboards.value.find(x=>x.id===currentId.value)?.name||'驾驶舱',layoutJson:JSON.stringify(layout.value),background:'#0f172a'}); if(!silent) ElMessage.success('布局已保存') }
   finally{ saving.value=false }
 }
 function onWinResize(){ for(const k in chartInstances) chartInstances[k].resize() }
@@ -166,7 +184,7 @@ onMounted(async()=>{ await loadDashboards(); await loadLayout() })
 
 <style scoped>
 .dashboard{
-  position:relative;height:calc(100vh - 260px);min-height:480px;border-radius:12px;overflow:hidden;margin-top:12px;
+  position:relative;height:calc(100vh - 260px);min-height:480px;border-radius:12px;overflow:auto;margin-top:12px;
   background:
     radial-gradient(ellipse at 12% 8%, rgba(56,189,248,.14), transparent 42%),
     radial-gradient(ellipse at 88% 92%, rgba(168,85,247,.12), transparent 42%),
