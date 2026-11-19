@@ -91,12 +91,12 @@ async function renderAll(){
     if(isPie){
       opt={ color:palette,
         tooltip:{trigger:'item',backgroundColor:'rgba(9,18,38,.92)',borderColor:'rgba(56,189,248,.35)',textStyle:{color:'#dbeafe',fontSize:11}},
-        series:[{type:'pie',data,radius:['8%','48%'],center:['50%','52%'],
+        series:[{type:'pie',data,radius:['10%','75%'],center:['50%','50%'],
           roseType:ctype==='rose'?'radius':undefined,
           minShowLabelAngle:.5,
           itemStyle:{borderColor:'rgba(9,18,38,.9)',borderWidth:2},
           label:{fontSize:9,color:'#94a3b8',formatter:p=>{const s=String(p.name);return s.length>6?s.slice(0,5)+'…':s}},
-          labelLine:{length:7,length2:5,lineStyle:{color:'rgba(148,163,184,.4)'}},
+          labelLine:{length:5,length2:4,lineStyle:{color:'rgba(148,163,184,.4)'}},
           labelLayout:{hideOverlap:true}}] }
     } else {
       const truncX=v=>{const s=String(v);return s.length>6?s.slice(0,5)+'…':s}
