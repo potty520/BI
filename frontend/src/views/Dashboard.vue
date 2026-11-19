@@ -38,7 +38,7 @@ import { api } from '../api'
 
 const dashboards=ref([]), currentId=ref(1), layout=ref([])
 const gridSnap=ref(true), saving=ref(false), board=ref(null)
-const chartEls={}, chartInstances={}
+const chartEls={}, chartInstances={}, chartROs={}
 const chartTypes=ref({})
 const drag=ref(null)
 function setChartRef(el,id){ if(el) chartEls[id]=el }
@@ -72,7 +72,12 @@ async function renderAll(){
     const el=chartEls[item.id]; if(!el) continue
     let inst=chartInstances[item.id]
     if(inst && inst.getDom()!==el){ inst.dispose(); inst=null }
-    if(!inst){ inst=echarts.init(el); chartInstances[item.id]=inst }
+    if(!inst){
+      inst=echarts.init(el); chartInstances[item.id]=inst
+      chartROs[item.id]?.disconnect()
+      chartROs[item.id]=new ResizeObserver(()=>inst.resize())
+      chartROs[item.id].observe(el)
+    }
     const data=(await api.chartData(item.chartId)).data
     const ctype=chartTypes.value[item.chartId]||'bar'
     const isPie=['pie','rose','funnel'].includes(ctype)
@@ -85,23 +90,27 @@ async function renderAll(){
     const palette=['#38bdf8','#22c55e','#f59e0b','#ef4444','#a855f7','#14b8a6','#eab308','#3b82f6','#ec4899']
     if(isPie){
       opt={ color:palette,
-        tooltip:{trigger:'item'},
-        series:[{type:'pie',data,radius:['8%','62%'],
+        tooltip:{trigger:'item',backgroundColor:'rgba(9,18,38,.92)',borderColor:'rgba(56,189,248,.35)',textStyle:{color:'#dbeafe',fontSize:11}},
+        series:[{type:'pie',data,radius:['8%','48%'],center:['50%','52%'],
           roseType:ctype==='rose'?'radius':undefined,
+          minShowLabelAngle:.5,
           itemStyle:{borderColor:'rgba(9,18,38,.9)',borderWidth:2},
-          label:{fontSize:9,color:'#94a3b8'},
-          labelLine:{lineStyle:{color:'rgba(148,163,184,.4)'}}}] }
+          label:{fontSize:9,color:'#94a3b8',formatter:p=>{const s=String(p.name);return s.length>6?s.slice(0,5)+'…':s}},
+          labelLine:{length:7,length2:5,lineStyle:{color:'rgba(148,163,184,.4)'}},
+          labelLayout:{hideOverlap:true}}] }
     } else {
-      const truncX=v=>{const s=String(v);return s.length>10?s.slice(0,9)+'…':s}
-      const truncY=v=>{const s=String(v);return s.length>8?s.slice(0,7)+'…':s}
-      const rotX=!isLine&&names.length>6
+      const truncX=v=>{const s=String(v);return s.length>6?s.slice(0,5)+'…':s}
+      const truncY=v=>{const s=String(v);return s.length>12?s.slice(0,11)+'…':s}
+      const fmtNum=v=>{const n=Number(v);if(!isFinite(n))return v;const a=Math.abs(n);
+        if(a>=1e8)return (n/1e8).toFixed(1)+'亿';if(a>=1e4)return (n/1e4).toFixed(a%1e4?1:0)+'万';return n}
+      const rotX=!isLine&&names.length>4
       opt={ color:['#38bdf8'],
         tooltip:{trigger:'axis',backgroundColor:'rgba(9,18,38,.92)',borderColor:'rgba(56,189,248,.35)',textStyle:{color:'#dbeafe',fontSize:11}},
-        grid:{left:isH?86:45,right:18,bottom:rotX?48:30,top:20},
-        xAxis:isH?{type:'value',axisLabel,splitLine:{lineStyle:{color:'rgba(148,163,184,.12)'}}}
-          :{type:'category',data:names,axisLabel:{...axisLabel,hideOverlap:true,rotate:rotX?30:0,formatter:truncX},axisLine:{lineStyle:{color:'rgba(148,163,184,.3)'}}},
+        grid:{left:6,right:isH?22:16,top:16,bottom:4,containLabel:true},
+        xAxis:isH?{type:'value',axisLabel:{...axisLabel,formatter:fmtNum},splitLine:{lineStyle:{color:'rgba(148,163,184,.12)'}}}
+          :{type:'category',data:names,axisLabel:{...axisLabel,rotate:rotX?40:0,interval:0,formatter:truncX},axisLine:{lineStyle:{color:'rgba(148,163,184,.3)'}}},
         yAxis:isH?{type:'category',data:names,axisLabel:{...axisLabel,hideOverlap:true,formatter:truncY},axisLine:{lineStyle:{color:'rgba(148,163,184,.3)'}}}
-          :{type:'value',axisLabel,splitLine:{lineStyle:{color:'rgba(148,163,184,.12)'}}},
+          :{type:'value',axisLabel:{...axisLabel,formatter:fmtNum},splitLine:{lineStyle:{color:'rgba(148,163,184,.12)'}}},
         series:[isLine
           ?{type:'line',smooth:true,data:values,symbolSize:5,
             areaStyle:{color:'rgba(56,189,248,.16)'},
@@ -146,8 +155,10 @@ async function saveLayout(){
   try{ await api.saveDashboard({id:currentId.value,name:dashboards.value.find(x=>x.id===currentId.value)?.name||'驾驶舱',layoutJson:JSON.stringify(layout.value),background:'#0f172a'}); ElMessage.success('布局已保存') }
   finally{ saving.value=false }
 }
+function onWinResize(){ for(const k in chartInstances) chartInstances[k].resize() }
 window.addEventListener('mouseup',onUp)
-onBeforeUnmount(()=>{ window.removeEventListener('mouseup',onUp); for(const k in chartInstances) chartInstances[k].dispose() })
+window.addEventListener('resize',onWinResize)
+onBeforeUnmount(()=>{ window.removeEventListener('mouseup',onUp); window.removeEventListener('resize',onWinResize); for(const k in chartROs) chartROs[k]?.disconnect(); for(const k in chartInstances) chartInstances[k].dispose() })
 onMounted(async()=>{ await loadDashboards(); await loadLayout() })
 </script>
 
