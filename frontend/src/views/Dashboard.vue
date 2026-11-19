@@ -103,12 +103,14 @@ async function renderAll(){
       const truncY=v=>{const s=String(v);return s.length>12?s.slice(0,11)+'…':s}
       const fmtNum=v=>{const n=Number(v);if(!isFinite(n))return v;const a=Math.abs(n);
         if(a>=1e8)return (n/1e8).toFixed(1)+'亿';if(a>=1e4)return (n/1e4).toFixed(a%1e4?1:0)+'万';return n}
-      const rotX=!isLine&&names.length>4
+      const dense=names.length>15
+      const truncD=v=>{const s=String(v);return s.length>7?s.slice(0,7)+'…':s}
+      const rotX=!isLine&&!dense&&names.length>4
       opt={ color:['#38bdf8'],
         tooltip:{trigger:'axis',backgroundColor:'rgba(9,18,38,.92)',borderColor:'rgba(56,189,248,.35)',textStyle:{color:'#dbeafe',fontSize:11}},
         grid:{left:6,right:isH?22:16,top:16,bottom:4,containLabel:true},
         xAxis:isH?{type:'value',axisLabel:{...axisLabel,formatter:fmtNum},splitLine:{lineStyle:{color:'rgba(148,163,184,.12)'}}}
-          :{type:'category',data:names,axisLabel:{...axisLabel,rotate:rotX?40:0,interval:0,formatter:truncX},axisLine:{lineStyle:{color:'rgba(148,163,184,.3)'}}},
+          :{type:'category',data:names,axisLabel:{...axisLabel,hideOverlap:dense,rotate:rotX?40:0,interval:dense?'auto':0,formatter:dense?truncD:truncX},axisLine:{lineStyle:{color:'rgba(148,163,184,.3)'}}},
         yAxis:isH?{type:'category',data:names,axisLabel:{...axisLabel,hideOverlap:true,formatter:truncY},axisLine:{lineStyle:{color:'rgba(148,163,184,.3)'}}}
           :{type:'value',axisLabel:{...axisLabel,formatter:fmtNum},splitLine:{lineStyle:{color:'rgba(148,163,184,.12)'}}},
         series:[isLine
